@@ -1,0 +1,82 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0" version="25.0.3">
+  <diagram name="Page-1" id="74e2e168-ea6b-b213-b513-2b3c1d86103e">
+    <mxGraphModel dx="1112" dy="572" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="none" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="1avZ75OFy1mtcfOJTAQZ-1" target="1avZ75OFy1mtcfOJTAQZ-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-1" value="图书信息" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="160" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="1avZ75OFy1mtcfOJTAQZ-2" target="1avZ75OFy1mtcfOJTAQZ-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-2" value="销售人员录入" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="160" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-5" value="顾客查询" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="160" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-7" value="" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.annotation_2;align=left;labelPosition=right;pointerEvents=1;rotation=90;" vertex="1" parent="1">
+          <mxGeometry x="468.75" y="125" width="62.5" height="242.5" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-9" value="ISBN" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="320" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-10" value="作者" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="320" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-11" value="书名" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="390" y="320" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-12" value="关键字" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="320" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-13" value="单价" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="600" y="320" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-14" value="库存量" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="320" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-15" value="&lt;div&gt;可查询&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="220" y="280" width="330" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-16" value="不可查询&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="565" y="280" width="195" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-19" value="操作记录" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="220" y="440" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-20" value="时间" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="400" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-21" value="用户" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="450" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-22" value="相关信息" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="398.75" y="500" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-26" value="" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.annotation_2;align=left;labelPosition=right;pointerEvents=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="400" width="50" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-30" value="盈利信息" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="530" y="440" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-31" value="收入" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="405" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-32" value="支出" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="450" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-33" value="利润" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="500" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="1avZ75OFy1mtcfOJTAQZ-34" value="" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.annotation_2;align=left;labelPosition=right;pointerEvents=1;" vertex="1" parent="1">
+          <mxGeometry x="650" y="405" width="50" height="130" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
