@@ -54,7 +54,6 @@ bf.putT(id, name); })
 constexpr size_t child_cnt = 16;
 
 // TODO: Add more static assertions to type Key and Val
-// TODO: Separate single-entry database and multi-entry database?
 template <class Key, class Val, auto KeyCmp, auto KeyEq>
 class Database {
 static_assert(std::is_convertible_v<decltype(KeyCmp), std::function<bool(Key, Key)>>
@@ -65,29 +64,19 @@ public:
   Database(std::string filename);
   void insert(Key key, Val val);
 
-  std::vector<Val> getAll(Key key);
   Val get(Key key);
+  std::pair<pos_t, Val> getLow(Key key);
   void modify(Key key, Val val);
 
+  Bfsp bf;
+
 private:
-  Bfsp bf, &nd;
 
   struct BHeader {
     int depth;
     pos_t root;
     int timestamp;
   } header;
-
-  struct Data {
-    pos_t beg;
-    int size, capacity;
-  };
-
-  struct Cell {
-    Val val;
-    bool erase;
-    int timestamp;
-  };
 
   struct Node {
     Key key[child_cnt - 1];
@@ -97,7 +86,7 @@ private:
 };
 
 template<class Key, class Val, auto KeyCmp, auto KeyEq>
-Database<Key, Val, KeyCmp, KeyEq>::Database(std::string filename) : bf(filename), nd(bf) {
+Database<Key, Val, KeyCmp, KeyEq>::Database(std::string filename) : bf(filename) {
   bf.getHeaderT(0, header);
   if (header.root == 0) {
     errf("initializing tree\n");
@@ -130,12 +119,7 @@ void Database<Key, Val, KeyCmp, KeyEq>::insert(Key key, Val val) {
       break;
   }
   if (k < node.size && KeyEq(node.key[k], key)) {  // exist
-    Data dhd{};
-    NWITH_ETR(nd, node.chd[k], dhd, );
-    Cell cell{val, false, ++header.timestamp};
-    bf.putT(0, header);
-    push_back(dhd, cell);
-    NWITH_ETW(nd, node.chd[k], dhd, );
+    throw Error("Key already exists");
   } else if (node.size + 1 < child_cnt) {
     for (int i = node.size; i > k; --i) {
       memcpy(&node.key[i], &node.key[i - 1], sizeof(node.key[i]));
@@ -143,20 +127,16 @@ void Database<Key, Val, KeyCmp, KeyEq>::insert(Key key, Val val) {
     }
     // memcpy(&node.key[k], key.c_str(), sizeof(Key));
     strcpy(node.key[k], key.c_str());
-    Data dch{0, 0, 0};
-    Cell cell{val, false, ++header.timestamp};
+    ++header.timestamp;
     bf.putT(0, header);
-    push_back(dch, cell);
-    node.chd[k] = nd.allocT(dch);
+    node.chd[k] = bf.allocT(val);
     ++node.size;
     WITH_ETW(now, node, );
   } else {
     assert(node.size == child_cnt - 1);
-    Data dch{0, 0, 0};
-    Cell cell{val, false, ++header.timestamp};
+    ++header.timestamp;
     bf.putT(0, header);
-    push_back(dch, cell);
-    pos_t dhd_pos = nd.allocT(dch);
+    pos_t dhd_pos = bf.allocT(val);
 
     Key ktmp[child_cnt + 1]{};
     pos_t kchd[child_cnt + 1]{};
@@ -265,37 +245,6 @@ void Database<Key, Val, KeyCmp, KeyEq>::insert(Key key, Val val) {
 }
 
 template<class Key, class Val, auto KeyCmp, auto KeyEq>
-std::vector<Val> Database<Key, Val, KeyCmp, KeyEq>::getAll(Key key) {
-  int depth = 0;
-  pos_t pos = header.root;
-  Node node{};
-  WITH_ETR(pos, node, );
-  pos_t k{};
-  while (depth <= header.depth) {
-    WITH_ETR(pos, node, );
-    for (k = 0; k + 1 < node.size; ++k)
-      if (!KeyCmp(node.key[k], key))
-        break;
-    pos = node.chd[k];
-    ++depth;
-  }
-
-  std::vector<Cell> res;
-  if (k < child_cnt - 1 && KeyEq(node.key[k], key)) {
-    Data dch{};
-    NWITH_ETR(nd, pos, dch, );
-    res.resize(dch.size);
-    nd.get(dch.beg, reinterpret_cast<char*>(&res[0]), sizeof(Cell) * dch.size);
-    for (int i = 0; i < dch.size; ++i)
-      assert(not res[i].erase);  // TODO: erase is not supported yet
-  }
-  std::vector<Val> ans;
-  for (int i = 0; i < (int)res.size(); ++i)
-    ans.push_back(res[i].val);
-  return ans;
-}
-
-template<class Key, class Val, auto KeyCmp, auto KeyEq>
 Val Database<Key, Val, KeyCmp, KeyEq>::get(Key key) {
   int depth = 0;
   pos_t pos = header.root;
@@ -311,18 +260,36 @@ Val Database<Key, Val, KeyCmp, KeyEq>::get(Key key) {
     ++depth;
   }
 
-  std::vector<Cell> res;
   if (k < child_cnt - 1 && KeyEq(node.key[k], key)) {
-    Data dch{};
-    NWITH_ETR(nd, pos, dch,);
-    if (!dch.size)
-      throw Error("get: not found");
-    res.resize(dch.size);
-    nd.get(dch.beg, reinterpret_cast<char *>(&res[0]), sizeof(Cell));
-    assert(not res[0].erase);  // TODO: erase is not supported yet
-    return res[0].val;
+    Val val;
+    NWITH_ETR(bf, pos, val,);
+    return val;
   }
   throw Error("get: not found");
+}
+
+template<class Key, class Val, auto KeyCmp, auto KeyEq>
+std::pair<pos_t, Val> Database<Key, Val, KeyCmp, KeyEq>::getLow(Key key) {
+  int depth = 0;
+  pos_t pos = header.root;
+  Node node{};
+  WITH_ETR(pos, node,);
+  pos_t k{};
+  while (depth <= header.depth) {
+    WITH_ETR(pos, node,);
+    for (k = 0; k + 1 < node.size; ++k)
+      if (!KeyCmp(node.key[k], key))
+        break;
+    pos = node.chd[k];
+    ++depth;
+  }
+
+  if (k < child_cnt - 1 && KeyEq(node.key[k], key)) {
+    Val val;
+    NWITH_ETR(bf, pos, val,);
+    return {pos, val};
+  }
+  throw Error("getLow: not found");
 }
 
 template<class Key, class Val, auto KeyCmp, auto KeyEq>
@@ -341,14 +308,10 @@ void Database<Key, Val, KeyCmp, KeyEq>::modify(Key key, Val val) {
     ++depth;
   }
 
-  if (k < child_cnt - 1 && KeyEq(node.key[k], key)) {
-    Data dch{};
-    NWITH_ETR(nd, pos, dch,);
-    if (!dch.size)
-      throw Error("modify: not found");
-    nd.putT(dch.beg, val);
-  }
-  throw Error("modify: not found");
+  if (k < child_cnt - 1 && KeyEq(node.key[k], key))
+    bf.putT(pos, val);
+  else
+    throw Error("modify: not found");
 }
 
 #undef NWITH_T
