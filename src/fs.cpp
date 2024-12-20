@@ -5,6 +5,8 @@
 #include <memory>
 #include <cstring>
 
+#define RESET 1
+
 struct BfspHeader {
   char data[header_size];
   pos_t nxt;
@@ -41,6 +43,7 @@ Bfsp::Bfsp(std::string filename_, size_t cache_size_, pos_t cache_start_) : file
   }
   assert(fs.is_open());
   fs.seekp(0, std::fstream::end);
+  errf("constructing fs %s\n", filename.c_str());
   if (!fs.tellp()) {
     errf("initializing\n");
     std::unique_ptr<BfspHeader> hd(new BfspHeader);

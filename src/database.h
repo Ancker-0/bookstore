@@ -63,12 +63,17 @@ public:
   Database() = delete;
   explicit Database(std::string filename);
   explicit Database(Bfsp &bf_);
-  void insert(Key key, Val val);
 
+  void insert(Key key, Val val);
+  void insertLow(Key key, pos_t pos);
   Val get(Key key);
+  bool exist(Key key);
   std::pair<pos_t, Val> getLow(Key key);
   void modify(Key key, Val val);
+  void erase(Key key);
   Bfsp &bf;
+
+  void printKeys();
 
 private:
 
@@ -135,7 +140,11 @@ void Database<Key, Val, KeyCmp, KeyEq, header_id>::insert(Key key, Val val) {
       break;
   }
   if (k < node.size && KeyEq(node.key[k], key)) {  // exist
-    throw Error("Key already exists");
+    if (node.chd[k] == nullpos) {
+      node.chd[k] = bf.allocT(val);
+      bf.putT(now, node);
+    } else
+      throw Error("Key already exists");
   } else if (node.size + 1 < child_cnt) {
     for (int i = node.size; i > k; --i) {
       memcpy(&node.key[i], &node.key[i - 1], sizeof(node.key[i]));
@@ -269,11 +278,34 @@ Val Database<Key, Val, KeyCmp, KeyEq, header_id>::get(Key key) {
   }
 
   if (k < child_cnt - 1 && KeyEq(node.key[k], key)) {
+    Massert(pos != nullpos, "deleted entry");
     Val val;
     NWITH_ETR(bf, pos, val,);
     return val;
   }
   throw Error("get: not found");
+}
+
+template<class Key, class Val, auto KeyCmp, auto KeyEq, int header_id>
+bool Database<Key, Val, KeyCmp, KeyEq, header_id>::exist(Key key) {
+  int depth = 0;
+  pos_t pos = header.root;
+  Node node{};
+  WITH_ETR(pos, node,);
+  pos_t k{};
+  while (depth <= header.depth) {
+    WITH_ETR(pos, node,);
+    for (k = 0; k + 1 < node.size; ++k)
+      if (!KeyCmp(node.key[k], key))
+        break;
+    pos = node.chd[k];
+    ++depth;
+  }
+
+  // TODO: may be (k < node.size) ?
+  if (k < child_cnt - 1 && KeyEq(node.key[k], key))
+    return node.chd[k] != nullpos;
+  return false;
 }
 
 template<class Key, class Val, auto KeyCmp, auto KeyEq, int header_id>
@@ -292,7 +324,9 @@ std::pair<pos_t, Val> Database<Key, Val, KeyCmp, KeyEq, header_id>::getLow(Key k
     ++depth;
   }
 
+  // TODO: may be (k < node.size) ?
   if (k < child_cnt - 1 && KeyEq(node.key[k], key)) {
+    Massert(pos != nullpos, "deleted entry");
     Val val;
     NWITH_ETR(bf, pos, val,);
     return {pos, val};
@@ -316,10 +350,50 @@ void Database<Key, Val, KeyCmp, KeyEq, header_id>::modify(Key key, Val val) {
     ++depth;
   }
 
-  if (k < child_cnt - 1 && KeyEq(node.key[k], key))
+  if (k < child_cnt - 1 && KeyEq(node.key[k], key)) {
+    Massert(pos != nullpos, "deleted entry");
     bf.putT(pos, val);
-  else
+  } else
     throw Error("modify: not found");
+}
+
+template<class Key, class Val, auto KeyCmp, auto KeyEq, int header_id>
+void Database<Key, Val, KeyCmp, KeyEq, header_id>::erase(Key key) {
+  int depth = 0;
+  pos_t pos = header.root, pre = nullpos;
+  Node node{};
+  WITH_ETR(pos, node,);
+  pos_t k{};
+  while (depth <= header.depth) {
+    WITH_ETR(pos, node,);
+    for (k = 0; k + 1 < node.size; ++k)
+      if (!KeyCmp(node.key[k], key))
+        break;
+    pre = pos, pos = node.chd[k];
+    ++depth;
+  }
+
+  // TODO: may be (k < node.size) ?
+  if (k < child_cnt - 1 && KeyEq(node.key[k], key) && node.chd[k] != nullpos)
+    WITH_ETW(pre, node, node.chd[k] = nullpos);
+  else
+    throw Error("erase: not found");
+}
+
+template<class Key, class Val, auto KeyCmp, auto KeyEq, int header_id>
+void Database<Key, Val, KeyCmp, KeyEq, header_id>::printKeys() {
+  // pos_t pos = header.root;
+  std::function<void(const Node &, int)> dfs = [&](const Node &n, int dep) {
+    if (dep == header.depth) {
+      for (int i = 0; i < n.size; ++i)
+        printf("%s ", n.key[i].data());
+      return;
+    } else
+      for (int i = 0; i <= n.size; ++i)
+        dfs(NWITH_TR(bf, n.chd[i], Node, tmp, tmp), dep + 1);
+  };
+  dfs(NWITH_TR(bf, header.root, Node, tmp, tmp), 0);
+  puts("");
 }
 
 #undef NWITH_T

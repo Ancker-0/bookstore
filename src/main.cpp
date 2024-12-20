@@ -7,19 +7,23 @@
 #include <cstring>
 #include <functional>
 
+#define PROMPT 0
+#define VERBOSE 0
+
 using namespace ci;
 
 int main() {
-  errf("%lu\n", sizeof(double));
-  double x = 1.0;
-  memset(&x, 0, sizeof(x));
-  printf("%Lf\n", x);
   Bfsp bf("test.db");
   DBMore<int, int, int> dbm{bf};
   while (true) {
     Ci &ci = Ci::getInstance();
     try {
-      // ci.process_one();
+#if 1
+#if PROMPT
+      std::cout << "> ";
+#endif
+      ci.process_one();
+#else
       std::string s;
       std::getline(std::cin, s);
       Tokenized tk = tokenize(s);
@@ -36,8 +40,13 @@ int main() {
         puts("");
       } else if (tk.command.at(0) == "exit")
         exit(0);
+#endif
     } catch (const Error &e) {
+#if VERBOSE
       errf("error - %s\n", e.msg.c_str());
+#else
+      std::cout << "Invalid" << std::endl;
+#endif
     }
     errf("");
   }
