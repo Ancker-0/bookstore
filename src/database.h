@@ -6,8 +6,8 @@
 
 #include <cassert>
 #include <functional>
+#include <memory>
 #include <cstring>
-#include <vector>
 #include <string>
 
 // TODO: Get rid of macros?
@@ -54,21 +54,21 @@ bf.putT(id, name); })
 constexpr size_t child_cnt = 16;
 
 // TODO: Add more static assertions to type Key and Val
-template <class Key, class Val, auto KeyCmp, auto KeyEq>
+template <class Key, class Val, auto KeyCmp, auto KeyEq, int header_id = 0>
 class Database {
 static_assert(std::is_convertible_v<decltype(KeyCmp), std::function<bool(Key, Key)>>
               && std::is_convertible_v<decltype(KeyEq), std::function<bool(Key, Key)>>);
 
 public:
-  Database() = default;
-  Database(std::string filename);
+  Database() = delete;
+  explicit Database(std::string filename);
+  explicit Database(Bfsp &bf_);
   void insert(Key key, Val val);
 
   Val get(Key key);
   std::pair<pos_t, Val> getLow(Key key);
   void modify(Key key, Val val);
-
-  Bfsp bf;
+  Bfsp &bf;
 
 private:
 
@@ -83,22 +83,39 @@ private:
     size_t size;
     pos_t fa, chd[child_cnt];
   };
+
+  std::unique_ptr<Bfsp> bf_ptr;
 };
 
-template<class Key, class Val, auto KeyCmp, auto KeyEq>
-Database<Key, Val, KeyCmp, KeyEq>::Database(std::string filename) : bf(filename) {
-  bf.getHeaderT(0, header);
+// template<class Key, class Val, auto KeyCmp, auto KeyEq, int header_id>
+// Database<Key, Val, KeyCmp, KeyEq, header_id>::Database(std::string filename) : bf_ptr(new Bfsp(filename)), bf(*bf_ptr) {
+//   errf("%p %p\n", bf_ptr.get(), &bf);
+//   if (bf.end < sizeof(BHeader))
+//     bf.allocEmpty(sizeof(BHeader) - bf.end);
+//   bf.getHeaderT(header_id, header);
+//   if (header.root == 0) {
+//     errf("initializing tree\n");
+//     Node node{{}, 0, nullpos, {}};
+//     header.root = bf.allocT(node);
+//     header.depth = 0;
+//     bf.putT(bf.getHeaderPos(header_id), header);
+//   }
+// }
+
+template<class Key, class Val, auto KeyCmp, auto KeyEq, int header_id>
+Database<Key, Val, KeyCmp, KeyEq, header_id>::Database(Bfsp &bf_) : bf(bf_) {
+  bf.getHeaderT(header_id, header);
   if (header.root == 0) {
     errf("initializing tree\n");
     Node node{{}, 0, nullpos, {}};
     header.root = bf.allocT(node);
     header.depth = 0;
-    bf.putT(0, header);
+    bf.putT(bf.getHeaderPos(header_id), header);
   }
 }
 
-template<class Key, class Val, auto KeyCmp, auto KeyEq>
-void Database<Key, Val, KeyCmp, KeyEq>::insert(Key key, Val val) {
+template<class Key, class Val, auto KeyCmp, auto KeyEq, int header_id>
+void Database<Key, Val, KeyCmp, KeyEq, header_id>::insert(Key key, Val val) {
     pos_t now = header.root;
   int depth = 0;
   Node node{};
@@ -114,7 +131,6 @@ void Database<Key, Val, KeyCmp, KeyEq>::insert(Key key, Val val) {
   WITH_ETR(now, node, );
   size_t k;
   for (k = 0; k < node.size; ++k) {
-    // errf("(insert 0 %s)\n", node.key[k]);
     if (!KeyCmp(node.key[k], key))
       break;
   }
@@ -125,17 +141,17 @@ void Database<Key, Val, KeyCmp, KeyEq>::insert(Key key, Val val) {
       memcpy(&node.key[i], &node.key[i - 1], sizeof(node.key[i]));
       memcpy(&node.chd[i], &node.chd[i - 1], sizeof(node.chd[i]));
     }
-    // memcpy(&node.key[k], key.c_str(), sizeof(Key));
-    strcpy(node.key[k], key.c_str());
+    // strcpy(node.key[k], key.c_str());
+    node.key[k] = key;
     ++header.timestamp;
-    bf.putT(0, header);
+    bf.putT(bf.getHeaderPos(header_id), header);
     node.chd[k] = bf.allocT(val);
     ++node.size;
     WITH_ETW(now, node, );
   } else {
     assert(node.size == child_cnt - 1);
     ++header.timestamp;
-    bf.putT(0, header);
+    bf.putT(bf.getHeaderPos(header_id), header);
     pos_t dhd_pos = bf.allocT(val);
 
     Key ktmp[child_cnt + 1]{};
@@ -143,7 +159,8 @@ void Database<Key, Val, KeyCmp, KeyEq>::insert(Key key, Val val) {
     /* TODO: these memcpy are stupid... improvements are to be made */
     memcpy(&ktmp[0], &node.key[0], sizeof(Key) * k);
     memcpy(&kchd[0], &node.chd[0], sizeof(kchd[0]) * k);
-    strcpy(ktmp[k], key.c_str());
+    // strcpy(ktmp[k], key.c_str());
+    ktmp[k] = key;
     memcpy(&kchd[k], &dhd_pos, sizeof(kchd[0]));
     memcpy(&ktmp[k + 1], &node.key[k], sizeof(Key) * (node.size - k));
     memcpy(&kchd[k + 1], &node.chd[k], sizeof(kchd[0]) * (node.size - k));
@@ -163,13 +180,6 @@ void Database<Key, Val, KeyCmp, KeyEq>::insert(Key key, Val val) {
     // std::string old_key = key;
     key = ktmp[mid - 1];
 
-    // for the loop to run properly, we need to maintain:
-    // + key
-    // + // old_key
-    // + node
-    // + node_pos
-    // + // rnode
-    // + rnode_pos
     for (; depth > 0; --depth) {
       Node fa{};
       WITH_ETR(node.fa, fa, );
@@ -183,9 +193,8 @@ void Database<Key, Val, KeyCmp, KeyEq>::insert(Key key, Val val) {
             memcpy(&fa.key[i], &fa.key[i - 1], sizeof(Key));
           memcpy(&fa.chd[i], &fa.chd[i - 1], sizeof(fa.chd[i]));
         }
-        strcpy(fa.key[k], key.c_str());
-        // if (k + 1 < child_cnt - 1)
-        //   strcpy(fa.key[k + 1], old_key);
+        // strcpy(fa.key[k], key.c_str());
+        fa.key[k] = key;
         memcpy(&fa.chd[k + 1], &rnode_pos, sizeof(rnode_pos));
 
         WITH_ETW(node.fa, fa, fa.size++);
@@ -196,11 +205,11 @@ void Database<Key, Val, KeyCmp, KeyEq>::insert(Key key, Val val) {
         for (k = 0; k + 1 < fa.size; ++k)
           if (!KeyCmp(fa.key[k], key))
             break;
-        // node_pos = fa.chd[k];
         memcpy(&ktmp[0], &fa.key[0], sizeof(Key) * k);
         memcpy(&kchd[0], &fa.chd[0], sizeof(fa.chd[0]) * (k + 1));
         // if (k + 1 < child_cnt)
-          strcpy(ktmp[k], key.c_str());
+          // strcpy(ktmp[k], key.c_str());
+        ktmp[k] = key;
         memcpy(&kchd[k + 1], &rnode_pos, sizeof(rnode_pos));
         assert(kchd[k] == node_pos);
         if (k + 1 < child_cnt) {
@@ -216,14 +225,12 @@ void Database<Key, Val, KeyCmp, KeyEq>::insert(Key key, Val val) {
         node.size = mid;
         memcpy(&node.key[0], &ktmp[0], sizeof(Key) * (node.size - 1));
         memcpy(&node.chd[0], &kchd[0], sizeof(kchd[0]) * node.size);
-        rnode.fa = node.fa;  // TODO: this is not true
+        rnode.fa = node.fa;
         rnode.size = child_cnt + 1 - mid;
         memcpy(&rnode.key[0], &ktmp[mid], sizeof(Key) * (rnode.size - 1));
         memcpy(&rnode.chd[0], &kchd[mid], sizeof(kchd[0]) * rnode.size);
         rnode_pos = bf.allocT(rnode);
         WITH_ETW(node_pos, node, );
-        // for (int i = 0; i < node.size; ++i)  // TODO: this is too slow. probably there is better way?
-        //   WITH_T(node.chd[i], Node, ntmp, ntmp.fa = node_pos);
         for (int i = 0; i < rnode.size; ++i)
           WITH_T(rnode.chd[i], Node, ntmp, ntmp.fa = rnode_pos);
         WITH_T(old_node_pos, Node, ntmp, ntmp.fa = k < mid ? node_pos : rnode_pos);
@@ -233,19 +240,20 @@ void Database<Key, Val, KeyCmp, KeyEq>::insert(Key key, Val val) {
     if (depth == 0) {
       errf("(growing! %d)\n", header.depth + 1);
       Node newroot{{}, 2, nullpos, {node_pos, rnode_pos}};
-      strcpy(newroot.key[0], key.c_str());
+      // strcpy(newroot.key[0], key.c_str());
+      newroot.key[0] = key;
       pos_t newroot_pos = bf.allocT(newroot);
       WITH_ET(node_pos, node, node.fa = newroot_pos);
       WITH_ET(rnode_pos, rnode, rnode.fa = newroot_pos);
       ++header.depth;
       header.root = newroot_pos;
-      bf.putT(0, header);
+      bf.putT(bf.getHeaderPos(header_id), header);
     }
   }
 }
 
-template<class Key, class Val, auto KeyCmp, auto KeyEq>
-Val Database<Key, Val, KeyCmp, KeyEq>::get(Key key) {
+template<class Key, class Val, auto KeyCmp, auto KeyEq, int header_id>
+Val Database<Key, Val, KeyCmp, KeyEq, header_id>::get(Key key) {
   int depth = 0;
   pos_t pos = header.root;
   Node node{};
@@ -268,8 +276,8 @@ Val Database<Key, Val, KeyCmp, KeyEq>::get(Key key) {
   throw Error("get: not found");
 }
 
-template<class Key, class Val, auto KeyCmp, auto KeyEq>
-std::pair<pos_t, Val> Database<Key, Val, KeyCmp, KeyEq>::getLow(Key key) {
+template<class Key, class Val, auto KeyCmp, auto KeyEq, int header_id>
+std::pair<pos_t, Val> Database<Key, Val, KeyCmp, KeyEq, header_id>::getLow(Key key) {
   int depth = 0;
   pos_t pos = header.root;
   Node node{};
@@ -292,8 +300,8 @@ std::pair<pos_t, Val> Database<Key, Val, KeyCmp, KeyEq>::getLow(Key key) {
   throw Error("getLow: not found");
 }
 
-template<class Key, class Val, auto KeyCmp, auto KeyEq>
-void Database<Key, Val, KeyCmp, KeyEq>::modify(Key key, Val val) {
+template<class Key, class Val, auto KeyCmp, auto KeyEq, int header_id>
+void Database<Key, Val, KeyCmp, KeyEq, header_id>::modify(Key key, Val val) {
   int depth = 0;
   pos_t pos = header.root;
   Node node{};

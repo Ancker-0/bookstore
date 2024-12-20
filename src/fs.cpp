@@ -62,26 +62,6 @@ Bfsp::Bfsp(std::string filename_, size_t cache_size_, pos_t cache_start_) : file
   assert(!fs.fail());
 }
 
-template<class T>
-void Bfsp::getT(pos_t pos, T &x) {
-  get(pos, reinterpret_cast<char *>(&x), sizeof(T));
-}
-
-template<class T>
-pos_t Bfsp::allocT(const T &x) {
-  return alloc(reinterpret_cast<const char *>(&x), sizeof(T));
-}
-
-template<class T>
-void Bfsp::putT(pos_t pos, const T &x) {
-  put(pos, reinterpret_cast<const char *>(&x), sizeof(T));
-}
-
-template<class T>
-void Bfsp::getHeaderT(int id, T &x) {
-  getHeader(id, reinterpret_cast<char *>(&x), sizeof(T));
-}
-
 void Bfsp::get(pos_t pos, char *x, ssize_t size) {
   // sync();
   if (cache_start <= pos && pos + size <= cache_start + cache_size) {
@@ -222,16 +202,23 @@ void Bfsp::erase(pos_t pos, ssize_t size) {
 
 void Bfsp::getHeader(int id, char *x, ssize_t sz) {
   assert(0 <= sz && sz <= header_size);
-  get(getHeaderId(id), x, sz);
+  get(getHeaderPos(id), x, sz);
 }
 
-pos_t Bfsp::getHeaderId(int id) {
+pos_t Bfsp::getHeaderPos(int id) {
   assert(0 <= id);
   pos_t now = 0;
   int cnt = 0;
   std::unique_ptr<BfspHeader> hd(new BfspHeader);
   while ((cnt++) < id) {
     getT(now, *hd);
+    if (hd->nxt == nullpos) {
+      BfspHeader nhd;
+      nhd.nxt = nullpos;
+      ::memset(nhd.data, 0, sizeof(nhd.data));
+      hd->nxt = allocT(nhd);
+      putT(now, *hd);
+    }
     now = hd->nxt;
     assert(now != nullpos);
   }

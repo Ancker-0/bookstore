@@ -46,7 +46,7 @@ public:
 
   void getHeader(int id, char *x, ssize_t sz);
 
-  pos_t getHeaderId(int id);
+  pos_t getHeaderPos(int id);
   pos_t end;
 
 private:
@@ -57,5 +57,25 @@ private:
   char *cache;
   pos_t cache_start;
 };
+
+template<class T>
+void Bfsp::getT(pos_t pos, T &x) {
+  get(pos, reinterpret_cast<char *>(&x), sizeof(T));
+}
+
+template<class T>
+pos_t Bfsp::allocT(const T &x) {
+  return alloc(reinterpret_cast<const char *>(&x), sizeof(T));
+}
+
+template<class T>
+void Bfsp::putT(pos_t pos, const T &x) {
+  put(pos, reinterpret_cast<const char *>(&x), sizeof(T));
+}
+
+template<class T>
+void Bfsp::getHeaderT(int id, T &x) {
+  getHeader(id, reinterpret_cast<char *>(&x), sizeof(T));
+}
 
 #endif //FS_H

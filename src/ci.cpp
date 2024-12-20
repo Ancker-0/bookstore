@@ -106,6 +106,16 @@ Tokenized ci::tokenize(std::string s) {
   return res;
 }
 
+/*
+# ??????
+su [UserID] ([Password])?
+logout
+register [UserID] [Password] [Username]
+passwd [UserID] ([CurrentPassword])? [NewPassword]
+useradd [UserID] [Password] [Privilege] [Username]
+delete [UserID]
+*/
+
 void Ci::process_one() {
   std::string s;
   std::getline(is, s);
