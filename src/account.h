@@ -5,12 +5,14 @@
 #include "util.h"
 #include "error.h"
 #include "database.h"
+#include "bookstore.h"
 
 #include <string>
 #include <cstring>
 #include <stack>
 
 using privilege_t = int;
+using identity_t = cstr<10>;
 using userid_t = cstr<30>;
 using username_t = cstr<30>;
 using password_t = cstr<30>;
@@ -54,9 +56,11 @@ public:
   void useradd(userid_t userid, password_t password, privilege_t privilege, username_t username);
   void changePassword(userid_t userid, password_t cur_pass, password_t new_pass);
   void erase(userid_t userid);
+  void select(ISBN_t ISBN);
 
   // TODO: move into private scope
   std::vector<Account> login_stack;
+  std::vector<bookid_t> select_stack;
   Database<cstr<30>, Account, std::less<cstr<30>>{}, std::equal_to<cstr<30>>{}> db;
 
 private:

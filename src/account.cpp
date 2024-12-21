@@ -16,6 +16,7 @@ void AccountCenter::login(userid_t userid, password_t password) {
   if (password == "" and ac.privilege >= cur.privilege)
     throw Error("login: not enough privilege");
   login_stack.push_back(ac);
+  select_stack.push_back(nullid);
 }
 
 void AccountCenter::logout() {
@@ -23,6 +24,7 @@ void AccountCenter::logout() {
   if (login_stack.size() == 1)
     throw Error("logout: no account logged in");
   login_stack.pop_back();
+  select_stack.pop_back();
 }
 
 void AccountCenter::regis(userid_t userid, password_t password, username_t username) {
@@ -37,14 +39,14 @@ void AccountCenter::useradd(userid_t userid, password_t password, privilege_t pr
     throw Error("useradd: user exists");
   Massert(login_stack.back().privilege >= 3, "access denied");
   Massert(login_stack.back().privilege > privilege, "cannot create such privilege");
-  Account ac{privilege, "customer", userid, username, password};
-  Massert(ac.validate(), "invalid account info");
+  Account ac{privilege, (identity_t)string2cstr<10>(privilege == 1 ? "customer" : (privilege == 3 ? "clerk" : "admin")), userid, username, password};
+  Massert(ac.validate() or privilege == 0, "invalid account info");
   db.insert(userid, ac);
 }
 
 void AccountCenter::changePassword(userid_t userid, password_t cur_pass, password_t new_pass) {
   Massert(db.exist(userid), "user does not exist");
-	Massert(login_stack.back().privilege >= 1, "access denied");
+  Massert(login_stack.back().privilege >= 1, "access denied");
   auto ac = db.get(userid);
   if (cur_pass != "" and cur_pass != ac.password)
     throw Error("changePassword: wrong password");
@@ -62,6 +64,12 @@ void AccountCenter::erase(userid_t userid) {
   db.erase(userid);
 }
 
+void AccountCenter::select(ISBN_t ISBN) {
+  Massert(login_stack.size() > 1, "not logged in");
+  Massert(login_stack.back().privilege >= 3, "access denied");
+  select_stack.back() = Bookstore::getInstance().select(ISBN);
+}
+
 void AccountCenter::sync(Account &ac) {
   try {
     ac = db.get(ac.userid);
@@ -74,6 +82,7 @@ void AccountCenter::sync(Account &ac) {
 AccountCenter::AccountCenter(): bf("account.db"), db(bf) {
   Account guest{0, "guest", "guest#unspecified", "guest#unspecified", "guest#unspecified"};
   login_stack.push_back(guest);
+  select_stack.push_back(nullid);
 
   bool init = false;
   bf.getHeaderT(0, init);

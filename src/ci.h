@@ -34,4 +34,6 @@ namespace ci {
 
 }
 
+using namespace ci;
+
 #endif //CI_H

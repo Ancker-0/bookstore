@@ -15,5 +15,8 @@ add_executable(bs
         src/database_more.h
         src/account.cpp
         src/account.h
-        src/util.h)
+        src/util.h
+        src/config.h
+        src/bookstore.cpp
+        src/bookstore.h)
 add_executable(bookstore-pre dist/bookstore-pre.cpp)

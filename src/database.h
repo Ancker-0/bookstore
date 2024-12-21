@@ -54,7 +54,7 @@ bf.putT(id, name); })
 constexpr size_t child_cnt = 16;
 
 // TODO: Add more static assertions to type Key and Val
-template <class Key, class Val, auto KeyCmp, auto KeyEq, int header_id = 0>
+template <class Key, class Val, auto KeyCmp = std::less<Key>{}, auto KeyEq = std::equal_to<Key>{}, int header_id = 0>
 class Database {
 static_assert(std::is_convertible_v<decltype(KeyCmp), std::function<bool(Key, Key)>>
               && std::is_convertible_v<decltype(KeyEq), std::function<bool(Key, Key)>>);
@@ -73,6 +73,7 @@ public:
   void erase(Key key);
   Bfsp &bf;
 
+	std::vector<Val> getAll();
   void printKeys();
 
 private:
@@ -394,6 +395,24 @@ void Database<Key, Val, KeyCmp, KeyEq, header_id>::printKeys() {
   };
   dfs(NWITH_TR(bf, header.root, Node, tmp, tmp), 0);
   puts("");
+}
+
+template<class Key, class Val, auto KeyCmp, auto KeyEq, int header_id>
+std::vector<Val> Database<Key, Val, KeyCmp, KeyEq, header_id>::getAll() {
+	std::vector<Val> ret;
+  std::function<void(const Node &, int)> dfs = [&](const Node &n, int dep) {
+    if (dep == header.depth) {
+      for (int i = 0; i < n.size; ++i) {
+				Val tmp{}; bf.getT(n.chd[i], tmp);
+				ret.push_back(tmp);
+			}
+      return;
+    } else
+      for (int i = 0; i <= n.size; ++i)
+        dfs(NWITH_TR(bf, n.chd[i], Node, tmp, tmp), dep + 1);
+  };
+  dfs(NWITH_TR(bf, header.root, Node, tmp, tmp), 0);
+	return ret;
 }
 
 #undef NWITH_T

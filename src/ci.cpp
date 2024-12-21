@@ -1,7 +1,10 @@
+// TODO: ISBN can be surrounded by quotes?
+
 #include "ci.h"
 #include "error.h"
 #include "account.h"
 #include "config.h"
+#include "bookstore.h"
 
 #include <string>
 
@@ -46,7 +49,7 @@ Tokenized ci::tokenize(std::string s) {
     } else {
       std::string key, val;
       cmd = false;
-      for (i_ = i; i_ < len; ++i_) {
+      for (i_ = i + 1; i_ < len; ++i_) {
         if (backslash) {
           key += s[i_];
           backslash = false;
@@ -121,18 +124,18 @@ delete [UserID]
 void Ci::process_one() {
   std::string s;
   std::getline(is, s);
-	// Massert(not is.eof(), "input end");
-	if (is.eof())
-		exit(1);
+  // Massert(not is.eof(), "input end");
+  if (is.eof())
+    exit(1);
 #if ECHO
-	std::cout << s << std::endl;
+  std::cout << s << std::endl;
 #endif
   Tokenized tk = tokenize(s);
   // if (tk.command.empty())
   //   throw Error("ci: not specify any command");
   // Massert(not tk.command.empty(), "not specify any command");
-	if (tk.command.empty())
-		return;
+  if (tk.command.empty())
+    return;
   if (tk.command[0] == "exit" or tk.command[0] == "quit") {
     Massert(tk.param.empty() and tk.command.size() == 1, "expect no params");
     exit(0);
@@ -164,11 +167,56 @@ void Ci::process_one() {
     Massert(tk.command.size() == 2, "invalid param");
     AccountCenter::getInstance().erase((userid_t)string2cstr<30>(tk.command.at(1)));
   } else if (tk.command.at(0) == "stack") {
-    for (auto s : AccountCenter::getInstance().login_stack)
-      printf("%s ", s.userid.data());
+    AccountCenter &ac = AccountCenter::getInstance();
+    assert(ac.login_stack.size() == ac.select_stack.size());
+    for (int i = 0; i < (int)ac.login_stack.size(); ++i)
+      printf("(%s %d) ", ac.login_stack[i].userid.data(), ac.select_stack[i]);
     puts("");
   } else if (tk.command.at(0) == "debug") {
     AccountCenter::getInstance().db.printKeys();
+  } else if (tk.command.at(0) == "select") {
+    Massert(tk.param.empty(), "expect no params");
+    Massert(tk.command.size() == 2, "invalid param");
+    AccountCenter::getInstance().select((ISBN_t)string2cstr<20>(tk.command.at(1)));
+  } else if (tk.command.at(0) == "modify") {
+    static const std::vector<std::string> modify_allow_fields = { "ISBN", "name", "author", "keyword", "price" };
+    // for (auto [k, _] : tk.param)
+    //   errf("%s ", k.c_str());
+    // errf("\n");
+    Massert(param_inside(tk, modify_allow_fields), "unexpected param");
+    Massert(tk.command.size() == 1, "expect no subcommand");
+    Massert(AccountCenter::getInstance().login_stack.back().privilege >= 3, "access denied");
+    Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullpos, "not selecting any book");
+    Bookstore::getInstance().modify(AccountCenter::getInstance().select_stack.back(), tk.param);
+  } else if (tk.command.at(0) == "show") {
+    static const std::vector<std::string> show_allow_fields = { "ISBN", "name", "author", "keyword" };
+    Massert(tk.param.empty() or (tk.param.size() == 1 and param_inside(tk, show_allow_fields)), "can't show");
+
+    if (tk.param.count("ISBN")) {
+      Bookstore::getInstance().showByISBN(string2cstr<20>(tk.param["ISBN"]));
+    } else if (tk.param.count("name")) {
+      Bookstore::getInstance().showByName(string2cstr<60>(tk.param["name"]));
+    } else if (tk.param.count("author")) {
+      Bookstore::getInstance().showByAuthor(string2cstr<60>(tk.param["author"]));
+    } else if (tk.param.count("keyword")) {
+      Bookstore::getInstance().showByKeyword(string2cstr<60>(tk.param["keyword"]));
+    } else {
+      assert(tk.param.empty());
+      Bookstore::getInstance().showAll();
+    }
+  } else if (tk.command.at(0) == "import") {
+    Massert(tk.command.size() == 3, "invalid param");
+    Massert(tk.param.empty(), "expect no params");
+    Massert(AccountCenter::getInstance().login_stack.back().privilege >= 3, "access denied");
+    Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullpos, "not selecting any book");
+    Bookstore::getInstance().import_book(AccountCenter::getInstance().select_stack.back(), string2int(tk.command.at(1)), string2double(tk.command.at(2)));
+  } else if (tk.command.at(0) == "buy") {
+    // TODO
+  } else if (tk.command.at(0) == ".print") {
+    Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullpos, "not selecting any book");
+    Book b = Bookstore::getInstance().askByBookid(AccountCenter::getInstance().select_stack.back());
+    b.print();
+    // printf("(book %s %s %s %s)\n", b.ISBN.data(), b.bookname.data(), b.author.data(), b.keyword.data());
   } else
-		throw Error("unrecognized command");
+    throw Error("unrecognized command");
 }
