@@ -1,6 +1,7 @@
 #include "ci.h"
 #include "error.h"
 #include "account.h"
+#include "config.h"
 
 #include <string>
 
@@ -123,10 +124,15 @@ void Ci::process_one() {
 	// Massert(not is.eof(), "input end");
 	if (is.eof())
 		exit(1);
+#if ECHO
+	std::cout << s << std::endl;
+#endif
   Tokenized tk = tokenize(s);
   // if (tk.command.empty())
   //   throw Error("ci: not specify any command");
-  Massert(not tk.command.empty(), "not specify any command");
+  // Massert(not tk.command.empty(), "not specify any command");
+	if (tk.command.empty())
+		return;
   if (tk.command[0] == "exit" or tk.command[0] == "quit") {
     Massert(tk.param.empty() and tk.command.size() == 1, "expect no params");
     exit(0);

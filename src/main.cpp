@@ -1,20 +1,19 @@
 #include "ci.h"
 #include "error.h"
 #include "database_more.h"
+#include "config.h"
 
 #include <iostream>
 #include <cstdio>
 #include <cstring>
 #include <functional>
 
-#define PROMPT 0
-#define VERBOSE 0
-
 using namespace ci;
 
 int main() {
   Bfsp bf("test.db");
   DBMore<int, int, int> dbm{bf};
+	int error_cnt = 0;
   while (true) {
     Ci &ci = Ci::getInstance();
     try {
@@ -43,7 +42,7 @@ int main() {
 #endif
     } catch (const Error &e) {
 #if VERBOSE
-      errf("error - %s\n", e.msg.c_str());
+      errf("error - %s %d\n", e.msg.c_str(), ++error_cnt);
 #else
       std::cout << "Invalid" << std::endl;
 #endif

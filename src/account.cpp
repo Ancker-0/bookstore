@@ -34,8 +34,9 @@ void AccountCenter::regis(userid_t userid, password_t password, username_t usern
 
 void AccountCenter::useradd(userid_t userid, password_t password, privilege_t privilege, username_t username) {
   if (db.exist(userid))
-    throw Error("register: user exists");
-  Massert(login_stack.back().privilege & 3, "access denied");
+    throw Error("useradd: user exists");
+  Massert(login_stack.back().privilege >= 3, "access denied");
+  Massert(login_stack.back().privilege > privilege, "cannot create such privilege");
   Account ac{privilege, "customer", userid, username, password};
   Massert(ac.validate(), "invalid account info");
   db.insert(userid, ac);
@@ -43,6 +44,7 @@ void AccountCenter::useradd(userid_t userid, password_t password, privilege_t pr
 
 void AccountCenter::changePassword(userid_t userid, password_t cur_pass, password_t new_pass) {
   Massert(db.exist(userid), "user does not exist");
+	Massert(login_stack.back().privilege >= 1, "access denied");
   auto ac = db.get(userid);
   if (cur_pass != "" and cur_pass != ac.password)
     throw Error("changePassword: wrong password");
@@ -54,7 +56,7 @@ void AccountCenter::changePassword(userid_t userid, password_t cur_pass, passwor
 
 void AccountCenter::erase(userid_t userid) {
   Massert(db.exist(userid), "user not exists");
-  Massert(login_stack.back().privilege & 7, "access denied");
+  Massert(login_stack.back().privilege >= 7, "access denied");
   for (int i = 1; i < (int)login_stack.size(); ++i)
     Massert(login_stack[i].userid != userid, "cannot erase a logged-in account");
   db.erase(userid);
