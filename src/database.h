@@ -110,6 +110,7 @@ private:
 
 template<class Key, class Val, auto KeyCmp, auto KeyEq, int header_id>
 Database<Key, Val, KeyCmp, KeyEq, header_id>::Database(Bfsp &bf_) : bf(bf_) {
+	// errf("initializing db");
   bf.getHeaderT(header_id, header);
   if (header.root == 0) {
     errf("initializing tree\n");

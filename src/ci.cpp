@@ -4,6 +4,7 @@
 #include "error.h"
 #include "account.h"
 #include "config.h"
+#include "finance.h"
 #include "bookstore.h"
 
 #include <string>
@@ -127,9 +128,13 @@ void Ci::process_one() {
   std::getline(is, s);
   // Massert(not is.eof(), "input end");
   if (is.eof())
-    exit(1);
+    exit(0);
 #if ECHO
+#if ECHO_ERR
+  std::cerr << s << std::endl;
+#else
   std::cout << s << std::endl;
+#endif
 #endif
   Tokenized tk = tokenize(s);
   // if (tk.command.empty())
@@ -193,9 +198,17 @@ void Ci::process_one() {
     Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullpos, "not selecting any book");
     Bookstore::getInstance().modify(AccountCenter::getInstance().select_stack.back(), tk.param);
   } else if (tk.command.at(0) == "show" and tk.command.size() >= 2 and tk.command.at(1) == "finance") {
+    Massert(tk.command.size() <= 3, "command");
+    Massert(acci.login_stack.size() > 1 and acci.login_stack.back().privilege == 7, "access denied");
+    Massert(tk.param.empty(), "param");
+    if (tk.command.size() == 2)
+      fnce.showAll();
+    else
+      fnce.show(string2int(tk.command.at(2)));
   } else if (tk.command.at(0) == "show") {
     static const std::vector<std::string> show_allow_fields = { "ISBN", "name", "author", "keyword" };
     Massert(tk.param.empty() or (tk.param.size() == 1 and param_inside(tk, show_allow_fields)), "can't show");
+    Massert(acci.login_stack.size() > 1 and acci.login_stack.back().privilege >= 1, "access denied");
 
     if (tk.param.count("ISBN")) {
       Bookstore::getInstance().showByISBN(string2cstr<20>(tk.param["ISBN"]));
@@ -216,7 +229,10 @@ void Ci::process_one() {
     Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullpos, "not selecting any book");
     Bookstore::getInstance().import_book(AccountCenter::getInstance().select_stack.back(), string2int(tk.command.at(1)), string2double(tk.command.at(2)));
   } else if (tk.command.at(0) == "buy") {
-    // TODO
+    Massert(acci.login_stack.size() > 1, "not logged in");
+    Massert(tk.param.empty(), "param");
+    Massert(tk.command.size() == 3, "command");
+    bkst.buy(string2cstr<20>(tk.command.at(1)), string2int(tk.command.at(2)));
   } else if (tk.command.at(0) == ".print") {
     Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullpos, "not selecting any book");
     Book b = Bookstore::getInstance().askByBookid(AccountCenter::getInstance().select_stack.back());

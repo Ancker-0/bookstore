@@ -68,4 +68,7 @@ private:
   AccountCenter();
 };
 
+// static AccountCenter &acci = AccountCenter::getInstance();
+#define acci AccountCenter::getInstance()
+
 #endif //ACCOUNT_H

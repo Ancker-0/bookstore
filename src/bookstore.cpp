@@ -1,5 +1,6 @@
 #include "bookstore.h"
 #include "util.h"
+#include "finance.h"
 
 void Book::print() {
   printf("%s\t%s\t%s\t%s\t%.2lf\t%d\n", ISBN.data(), bookname.data(), author.data(), keyword.data(), price, quantity);
@@ -95,6 +96,7 @@ void Bookstore::import_book(bookid_t bookid, quantity_t quantity, totalcost_t to
   b.quantity += quantity;
   b.totalcost += totalcost;
   bf.putT(pos, b);
+  fnce.outcome(totalcost);
 }
 
 void Bookstore::showByISBN(ISBN_t ISBN) {
@@ -183,4 +185,17 @@ void Bookstore::showAll() {
   } catch(const Error &) {
     puts("");
   }
+}
+
+void Bookstore::buy(ISBN_t ISBN, int quantity) {
+  Massert(quantity > 0, "bad quantity");
+  pos_t pos = db_ISBN.get(ISBN);
+  Book b{}; bf.getT(pos, b);
+  Massert(quantity <= b.quantity, "no enough book");
+  eraseBook(pos);
+  b.quantity -= quantity;
+  bf.putT(pos, b);
+  insertBook(pos);
+  printf("%.2lf\n", quantity * b.price);
+  fnce.income(quantity * b.price);
 }

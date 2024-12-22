@@ -18,5 +18,7 @@ add_executable(bs
         src/util.h
         src/config.h
         src/bookstore.cpp
-        src/bookstore.h)
+        src/bookstore.h
+        src/finance.cpp
+        src/finance.h)
 add_executable(bookstore-pre dist/bookstore-pre.cpp)

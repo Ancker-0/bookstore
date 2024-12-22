@@ -51,13 +51,15 @@ static std::vector<std::string> split_keyword(std::string keyword) {
   std::string now;
   for (int i = 0; i < (int)keyword.size(); ++i)
     if (keyword[i] == '|') {
-      Massert(i > 0 and now != "" and (i + 1 == (int)keyword.size() or keyword[i + 1] != '|'), "parse fail");
+      Massert(i > 0 and now != "" and i + 1 != (int)keyword.size() and keyword[i + 1] != '|', "parse fail");
       ret.push_back(now);
       now = "";
     } else
       now += keyword[i];
+  if (now != "")
+    ret.push_back(now);
   for (int i = 1; i < (int)ret.size(); ++i)
-    for (int j = 0; j < i; ++i)
+    for (int j = 0; j < i; ++j)
       Massert(ret[i] != ret[j], "duplicated keyword");
   return ret;
 }
@@ -83,6 +85,14 @@ static cstr<size> string2cstr(std::string s) {
 static double string2double(std::string s) {
   std::stringstream ss{s};
   double ret{};
+  ss >> ret;
+  return ret;
+}
+
+static std::string double2string(double r) {
+  std::stringstream ss;
+  ss << r;
+  std::string ret;
   ss >> ret;
   return ret;
 }

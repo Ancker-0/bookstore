@@ -11,6 +11,10 @@
 using namespace ci;
 
 int main() {
+#if TESTFILE
+  freopen(FILENAME, "r", stdin);
+#endif
+
   Bfsp bf("test.db");
   DBMore<int, int, int> dbm{bf};
 	int error_cnt = 0;
@@ -43,9 +47,8 @@ int main() {
     } catch (const Error &e) {
 #if VERBOSE
       errf("error - %s %d\n", e.msg.c_str(), ++error_cnt);
-#else
-      std::cout << "Invalid" << std::endl;
 #endif
+      std::cout << "Invalid" << std::endl;
     }
     errf("");
   }

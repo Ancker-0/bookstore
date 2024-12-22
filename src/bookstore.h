@@ -67,6 +67,9 @@ public:
   void showByAuthor(author_t author);
   void showByKeyword(keyword_t keyword);
   void showAll();
+  void buy(ISBN_t ISBN, int quantity);
 };
+
+static Bookstore &bkst = Bookstore::getInstance();
 
 #endif

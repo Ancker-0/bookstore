@@ -1,11 +1,10 @@
 #include "fs.h"
 #include "error.h"
+#include "config.h"
 
 #include <cassert>
 #include <memory>
 #include <cstring>
-
-#define RESET 1
 
 struct BfspHeader {
   char data[header_size];
@@ -26,7 +25,7 @@ Bfsp::~Bfsp() {
 Bfsp::Bfsp(std::string filename_, size_t cache_size_, pos_t cache_start_) : filename(filename_),
                                     fs(filename, std::fstream::in | std::fstream::out | std::fstream::binary),
                                     cache_size(cache_size_), cache(new char[cache_size]), cache_start(cache_start_) {
-#if RESET
+#if RESET_DB
   fs.close();
   {
     char cmd[1024];
@@ -63,6 +62,7 @@ Bfsp::Bfsp(std::string filename_, size_t cache_size_, pos_t cache_start_) : file
     fs.read(cache, std::min(end - cache_start, (pos_t)cache_size));
   }
   assert(!fs.fail());
+  errf("constructed fs %s\n", filename.c_str());
 }
 
 void Bfsp::get(pos_t pos, char *x, ssize_t size) {

@@ -85,12 +85,13 @@ AccountCenter::AccountCenter(): bf("account.db"), db(bf) {
   select_stack.push_back(nullid);
 
   bool init = false;
-  bf.getHeaderT(0, init);
+  bf.getHeaderT(1, init);
   if (not init) {
+    errf("initializing account\n");
     Account root{7, "admin", "root", "root#unspecified", "sjtu" };
     db.insert(root.userid, root);
 
     init = true;
-    bf.putT(bf.getHeaderPos(0), init);
+    bf.putT(bf.getHeaderPos(1), init);
   }
 }
