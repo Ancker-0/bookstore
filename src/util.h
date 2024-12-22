@@ -47,7 +47,19 @@ bool operator<(const cstr<sizeu> &u, const cstr<sizev> &v) {
 }
 
 static std::vector<std::string> split_keyword(std::string keyword) {
-  // TODO;
+  std::vector<std::string> ret;
+  std::string now;
+  for (int i = 0; i < (int)keyword.size(); ++i)
+    if (keyword[i] == '|') {
+      Massert(i > 0 and now != "" and (i + 1 == (int)keyword.size() or keyword[i + 1] != '|'), "parse fail");
+      ret.push_back(now);
+      now = "";
+    } else
+      now += keyword[i];
+  for (int i = 1; i < (int)ret.size(); ++i)
+    for (int j = 0; j < i; ++i)
+      Massert(ret[i] != ret[j], "duplicated keyword");
+  return ret;
 }
 
 template <size_t size>

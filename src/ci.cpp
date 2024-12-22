@@ -45,7 +45,8 @@ Tokenized ci::tokenize(std::string s) {
       }
       if (backslash)
         throw Error("tokenize: backslash expected one charactor, read eol");
-      res.command.push_back(cur);
+      if (cur != "")
+        res.command.push_back(cur);
     } else {
       std::string key, val;
       cmd = false;
@@ -140,6 +141,9 @@ void Ci::process_one() {
     Massert(tk.param.empty() and tk.command.size() == 1, "expect no params");
     exit(0);
   } else if (tk.command.at(0) == "su") {
+    // for (auto &c : tk.command)
+    //   errf("#%s ", c.c_str());
+    // errf("\n");
     Massert(tk.param.empty(), "expect no params");
     Massert(tk.command.size() >= 2 and tk.command.size() <= 3, "invalid param");
     AccountCenter::getInstance().login((userid_t)string2cstr<30>(tk.command.at(1)), (password_t)string2cstr<30>(tk.command.size() >= 3 ? tk.command.at(2) : ""));
@@ -188,6 +192,7 @@ void Ci::process_one() {
     Massert(AccountCenter::getInstance().login_stack.back().privilege >= 3, "access denied");
     Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullpos, "not selecting any book");
     Bookstore::getInstance().modify(AccountCenter::getInstance().select_stack.back(), tk.param);
+  } else if (tk.command.at(0) == "show" and tk.command.size() >= 2 and tk.command.at(1) == "finance") {
   } else if (tk.command.at(0) == "show") {
     static const std::vector<std::string> show_allow_fields = { "ISBN", "name", "author", "keyword" };
     Massert(tk.param.empty() or (tk.param.size() == 1 and param_inside(tk, show_allow_fields)), "can't show");

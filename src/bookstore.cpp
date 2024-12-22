@@ -38,28 +38,30 @@ bookid_t Bookstore::select(ISBN_t ISBN) {
 void Bookstore::eraseBook(BookPtr bp) {
   Book b{};
   bf.getT(bp, b);
-  printf("erase "); b.print();
+  // printf("erase "); b.print();
   db_ISBN.erase(b.ISBN);
   if (not cstr_null(b.bookname))
     db_bookname.erase(b.bookname, b.bookid);
   if (not cstr_null(b.author))
     db_author.erase(b.author, b.bookid);
-  if (not cstr_null(b.keyword))  // TODO: parse keyword
-    db_keyword.erase(b.keyword, b.bookid);
+  if (not cstr_null(b.keyword))
+    for (auto &k : split_keyword(b.keyword.data()))
+      db_keyword.erase(string2cstr<60>(k), b.bookid);
   db_bookid.erase(b.bookid);
 }
 
 void Bookstore::insertBook(BookPtr bp) {
   Book b{};
   bf.getT(bp, b);
-  printf("insert "); b.print();
+  // printf("insert "); b.print();
   db_ISBN.insert(b.ISBN, bp);
   if (not cstr_null(b.bookname))
     db_bookname.insert(b.bookname, bp, b.bookid);
   if (not cstr_null(b.author))
     db_author.insert(b.author, bp, b.bookid);
-  if (not cstr_null(b.keyword))  // TODO: parse keyword
-    db_keyword.insert(b.keyword, bp, b.bookid);
+  if (not cstr_null(b.keyword))
+    for (auto &k : split_keyword(b.keyword.data()))
+      db_keyword.insert(string2cstr<60>(k), bp, b.bookid);
   db_bookid.insert(b.bookid, bp);
 }
 
@@ -104,65 +106,81 @@ void Bookstore::showByISBN(ISBN_t ISBN) {
 }
 
 void Bookstore::showByName(bookname_t bookname) {
-  auto bookptrs = db_bookname.get(bookname);
-  std::vector<Book> books;
-  std::transform(bookptrs.begin(), bookptrs.end(), std::back_inserter(books), [&](pos_t p) {
-      Book ret{}; bf.getT(p, ret);
-      return ret;
-    });
-  if (books.empty())
+  try {
+    auto bookptrs = db_bookname.get(bookname);
+    std::vector<Book> books;
+    std::transform(bookptrs.begin(), bookptrs.end(), std::back_inserter(books), [&](pos_t p) {
+        Book ret{}; bf.getT(p, ret);
+        return ret;
+        });
+    if (books.empty())
+      puts("");
+    else {
+      std::sort(books.begin(), books.end(), [&](auto &u, auto &v) { return u.ISBN < v.ISBN; });
+      for (auto &b : books)
+        b.print();
+    }
+  } catch(const Error &) {
     puts("");
-  else {
-    std::sort(books.begin(), books.end(), [&](auto &u, auto &v) { return u.ISBN < v.ISBN; });
-    for (auto &b : books)
-      b.print();
   }
 }
 
 void Bookstore::showByAuthor(author_t author) {
-  auto bookptrs = db_author.get(author);
-  std::vector<Book> books;
-  std::transform(bookptrs.begin(), bookptrs.end(), std::back_inserter(books), [&](pos_t p) {
-      Book ret{}; bf.getT(p, ret);
-      return ret;
-    });
-  if (books.empty())
+  try {
+    auto bookptrs = db_author.get(author);
+    std::vector<Book> books;
+    std::transform(bookptrs.begin(), bookptrs.end(), std::back_inserter(books), [&](pos_t p) {
+        Book ret{}; bf.getT(p, ret);
+        return ret;
+        });
+    if (books.empty())
+      puts("");
+    else {
+      std::sort(books.begin(), books.end(), [&](auto &u, auto &v) { return u.ISBN < v.ISBN; });
+      for (auto &b : books)
+        b.print();
+    }
+  } catch(const Error &) {
     puts("");
-  else {
-    std::sort(books.begin(), books.end(), [&](auto &u, auto &v) { return u.ISBN < v.ISBN; });
-    for (auto &b : books)
-      b.print();
   }
 }
 
 void Bookstore::showByKeyword(keyword_t keyword) {
-  auto bookptrs = db_keyword.get(keyword);
-  std::vector<Book> books;
-  std::transform(bookptrs.begin(), bookptrs.end(), std::back_inserter(books), [&](pos_t p) {
-      Book ret{}; bf.getT(p, ret);
-      return ret;
-    });
-  if (books.empty())
+  try {
+    auto bookptrs = db_keyword.get(keyword);
+    std::vector<Book> books;
+    std::transform(bookptrs.begin(), bookptrs.end(), std::back_inserter(books), [&](pos_t p) {
+        Book ret{}; bf.getT(p, ret);
+        return ret;
+        });
+    if (books.empty())
+      puts("");
+    else {
+      std::sort(books.begin(), books.end(), [&](auto &u, auto &v) { return u.ISBN < v.ISBN; });
+      for (auto &b : books)
+        b.print();
+    }
+  } catch(const Error &) {
     puts("");
-  else {
-    std::sort(books.begin(), books.end(), [&](auto &u, auto &v) { return u.ISBN < v.ISBN; });
-    for (auto &b : books)
-      b.print();
   }
 }
 
 void Bookstore::showAll() {
-  auto bookptrs = db_bookid.getAll();
-  std::vector<Book> books;
-  std::transform(bookptrs.begin(), bookptrs.end(), std::back_inserter(books), [&](pos_t p) {
-      Book ret{}; bf.getT(p, ret);
-      return ret;
-    });
-  if (books.empty())
+  try {
+    auto bookptrs = db_bookid.getAll();
+    std::vector<Book> books;
+    std::transform(bookptrs.begin(), bookptrs.end(), std::back_inserter(books), [&](pos_t p) {
+        Book ret{}; bf.getT(p, ret);
+        return ret;
+        });
+    if (books.empty())
+      puts("");
+    else {
+      std::sort(books.begin(), books.end(), [&](auto &u, auto &v) { return u.ISBN < v.ISBN; });
+      for (auto &b : books)
+        b.print();
+    }
+  } catch(const Error &) {
     puts("");
-  else {
-    std::sort(books.begin(), books.end(), [&](auto &u, auto &v) { return u.ISBN < v.ISBN; });
-    for (auto &b : books)
-      b.print();
   }
 }
