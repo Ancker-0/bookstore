@@ -236,10 +236,10 @@ void Ci::process_one() {
   } else if (tk.command.at(0) == ".debug") {
     AccountCenter::getInstance().db.printKeys();
   } else if (tk.command.at(0) == "select") {
-    // GOODTK;
+    GOODTK;
     // Massert(tk.param.empty(), "expect no params");
     Massert(tk.splited.size() == 2, "invalid param");
-    AccountCenter::getInstance().select((ISBN_t)string2cstr<20>(tk.command.at(1)));
+    AccountCenter::getInstance().select(string2ISBN(tk.splited.at(1)));
   } else if (tk.command.at(0) == "modify") {
     GOODTK;
     static const std::vector<std::string> modify_allow_fields = { "ISBN", "name", "author", "keyword", "price" };
