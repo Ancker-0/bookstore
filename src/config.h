@@ -7,6 +7,7 @@
 #define ECHO_ERR 0
 #define RESET_DB 0
 #define NO_ERRF 1
+#define STRICT_CI 1
 
 #define TESTFILE 0
 #define FILENAME "../data/advanced/testcase1/1.in"

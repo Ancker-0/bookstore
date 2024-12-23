@@ -11,8 +11,60 @@
 
 using namespace ci;
 
+#define _GOODTK(tk) ((tk).cmdB4param and not (tk).fail_param)
+#define GOODTK Massert(_GOODTK(tk), "bad command")
+
+#if STRICT_CI
+
+Tokenized ci::tokenize(std::string s) {
+  Tokenized res{};
+  res.raw = s;
+  res.cmdB4param = true;
+
+  int len = (int)s.size();
+  std::vector<std::string> &sp = res.splited;
+  std::string now = "";
+  for (int i = 0, i_; i < len; i = i_) {
+    if (s[i] == ' ') {
+      i_ = i + 1;
+      continue;
+    }
+    for (i_ = i; i_ < len and s[i_] != ' '; ++i_)
+      now += s[i_];
+    assert(now != "");
+    sp.push_back(now);
+  }
+  for (int i = 0, cmd = true; i < (int)sp.size(); ++i)
+    if (sp[i][0] == '-') {
+      cmd = false;
+      int p = 1;
+      for (; p < (int)sp[i].size(); ++i)
+        if (sp[i][p] == '=')
+          break;
+      if (p == 1 or p >= (int)sp[i].size() - 1)
+        res.fail_param = true;
+      else {
+        std::string key = sp[i].substr(1, p - 1);
+        if (res.param.count(key))
+          res.fail_param = true;
+        else
+          res.param[key] = sp[i].substr(p + 1);;
+      }
+    } else {
+      res.command.push_back(sp[i]);
+      if (not cmd)
+        res.cmdB4param = false;
+    }
+  return res;
+}
+
+#else
+
 Tokenized ci::tokenize(std::string s) {
   Tokenized res;
+  res.raw = s;
+  res.cmdB4param = true;
+
   int len = (int)s.size();
   bool cmd = true;
   for (int i = 0, i_; i < len; i = i_) {
@@ -107,6 +159,8 @@ Tokenized ci::tokenize(std::string s) {
   return res;
 }
 
+#endif
+
 /*
 # ??????
 su [UserID] ([Password])?
@@ -137,12 +191,11 @@ void Ci::process_one() {
   if (tk.command.empty())
     return;
   if (tk.command[0] == "exit" or tk.command[0] == "quit") {
+    GOODTK;
     Massert(tk.param.empty() and tk.command.size() == 1, "expect no params");
     exit(0);
   } else if (tk.command.at(0) == "su") {
-    // for (auto &c : tk.command)
-    //   errf("#%s ", c.c_str());
-    // errf("\n");
+    GOODTK;
     Massert(tk.param.empty(), "expect no params");
     Massert(tk.command.size() >= 2 and tk.command.size() <= 3, "invalid param");
     AccountCenter::getInstance().login((userid_t)string2cstr<30>(tk.command.at(1)), (password_t)string2cstr<30>(tk.command.size() >= 3 ? tk.command.at(2) : ""));

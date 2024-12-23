@@ -26,8 +26,11 @@ namespace ci {
   };
 
   struct Tokenized {
+    std::string raw;
+    std::vector<std::string> splited;
     std::vector<std::string> command;
     std::map<std::string, std::string> param;
+    bool cmdB4param, fail_param;
   };
 
   Tokenized tokenize(std::string);

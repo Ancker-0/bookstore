@@ -7,10 +7,33 @@
 #include <array>
 #include <sstream>
 #include <cstring>
+#include <cstdint>
 
 template <size_t size>
 class cstr : public std::array<char, size + 1> {
+public:
+  static constexpr int N = size;
 };
+
+typedef int64_t pos_t;
+
+// book types
+#define DF(n, len) using n##_t = cstr<len>;
+DF(ISBN, 20);
+DF(bookname, 60);
+DF(author, 60);
+DF(keyword, 60);
+using quantity_t = uint32_t;
+using price_t = double;
+using totalcost_t = double;
+using bookid_t = pos_t;
+
+// account types
+using privilege_t = int;
+using identity_t = cstr<10>;
+using userid_t = cstr<30>;
+using username_t = cstr<30>;
+using password_t = cstr<30>;
 
 static const char userid_chars[] = "1234567890zxcvbnmasdfghjklqwertyuiopZXCVBNMASDFGHJKLQWERTYUIOP_";
 static const char username_chars[] = " 0@P`p!1AQaq\"2BRbr#3CScs$4DTdt%5EUeu&6FVfv'7GWgw(8HXhx)9IYiy*:JZjz+;K[k{,<L\\l|-=M]m}.>N^n~/?O_o";  // also used by ISBN
@@ -201,6 +224,36 @@ static bool valid_author(auto s) {
 
 static bool valid_keyword(auto s) {
   return valid_bookname(s);
+}
+
+static bookname_t string2bookname(std::string s) {
+  Massert(valid_bookname(s), "bad bookname");
+  return string2cstr<bookname_t::N>(s);
+}
+
+static author_t string2author(std::string s) {
+  Massert(valid_author(s), "bad author");
+  return string2cstr<author_t::N>(s);
+}
+
+static ISBN_t string2ISBN(std::string s) {
+  Massert(valid_ISBN(s), "bad ISBN");
+  return string2cstr<ISBN_t::N>(s);
+}
+
+static userid_t string2userid(std::string s) {
+  Massert(valid_userid(s), "bad userid");
+  return string2cstr<userid_t::N>(s);
+}
+
+static password_t string2password(std::string s) {
+  Massert(valid_password(s), "bad password");
+  return string2cstr<password_t::N>(s);
+}
+
+static username_t string2username(std::string s) {
+  Massert(valid_username(s), "bad username");
+  return string2cstr<username_t::N>(s);
 }
 
 #endif //UTIL_H

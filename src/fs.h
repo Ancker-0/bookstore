@@ -1,11 +1,12 @@
 #ifndef FS_H
 #define FS_H
+
+#include "util.h"
+
 #include <string>
 #include <cstdint>
 #include <mutex>
 #include <fstream>
-
-typedef int64_t pos_t;
 
 constexpr pos_t nullpos = -1;
 constexpr size_t header_size = 56;

@@ -11,12 +11,6 @@
 #include <cstring>
 #include <stack>
 
-using privilege_t = int;
-using identity_t = cstr<10>;
-using userid_t = cstr<30>;
-using username_t = cstr<30>;
-using password_t = cstr<30>;
-
 struct Account {
   int privilege;
   cstr<10> identity;

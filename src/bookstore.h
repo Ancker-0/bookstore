@@ -7,17 +7,6 @@
 
 #include <cstdint>
 
-#define DF(n, len) using n##_t = cstr<len>;
-
-DF(ISBN, 20);
-DF(bookname, 60);
-DF(author, 60);
-DF(keyword, 60);
-using quantity_t = uint32_t;
-using price_t = double;
-using totalcost_t = double;
-using bookid_t = pos_t;
-
 static constexpr bookid_t nullid = -1;
 
 struct Book {
