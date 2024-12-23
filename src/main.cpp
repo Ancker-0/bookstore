@@ -15,6 +15,7 @@ int main() {
 #if TESTFILE
   freopen(FILENAME, "r", stdin);
 #endif
+  // printf("%d\n", (int)'´');
   errf("%d\n", valid_bookname(std::string{"Hello"}));
 
   Bfsp bf("test.db");

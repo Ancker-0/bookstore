@@ -1,10 +1,16 @@
 #ifndef ERROR_H
 #define ERROR_H
 
+#include "config.h"
+
 #include <exception>
 #include <string>
 
+#if NO_ERRF
+#define errf(...) 42
+#else
 #define errf(x, ...) fprintf(stderr, x, ##__VA_ARGS__)
+#endif
 
 class Error : std::exception {
 public:

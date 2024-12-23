@@ -13,8 +13,8 @@ class cstr : public std::array<char, size + 1> {
 };
 
 static const char userid_chars[] = "1234567890zxcvbnmasdfghjklqwertyuiopZXCVBNMASDFGHJKLQWERTYUIOP_";
-static const char username_chars[] = " 0@P`p!1AQaq\"2BRbr#3CScs$4DTdt%5EUeu&6FVfv´7GWgw(8HXhx)9IYiy*:JZjz+;K[k{,<L\\l|-=M]m}.>N^n~/?O_o";
-static const char bookname_chars[] = " 0@P`p!1AQaq2BRbr#3CScs$4DTdt%5EUeu&6FVfv´7GWgw(8HXhx)9IYiy*:JZjz+;K[k{,<L\\l|-=M]m}.>N^n~/?O_o";
+static const char username_chars[] = " 0@P`p!1AQaq\"2BRbr#3CScs$4DTdt%5EUeu&6FVfv'7GWgw(8HXhx)9IYiy*:JZjz+;K[k{,<L\\l|-=M]m}.>N^n~/?O_o";  // also used by ISBN
+static const char bookname_chars[] = " 0@P`p!1AQaq2BRbr#3CScs$4DTdt%5EUeu&6FVfv'7GWgw(8HXhx)9IYiy*:JZjz+;K[k{,<L\\l|-=M]m}.>N^n~/?O_o";
 
 static bool inside(char c, const char *s) {
   for (; *s; ++s)
@@ -127,14 +127,14 @@ static int string2int(std::string s) {
   return ret;
 }
 
-static bool valid_userid(auto s);
+static bool valid_userid(cstr<30> s);
 
 static bool valid_userid(const std::string &s) {
   return valid_userid(string2cstr<30>(s));
 }
 
-static bool valid_userid(auto s) {
-  if (not std::is_same_v<decltype(s), cstr<30>> or not cstr_end(s))
+static bool valid_userid(cstr<30> s) {
+  if (not cstr_end(s))
     return false;
   for (int i = 0; s[i]; ++i)
     if (not inside(s[i], userid_chars))
@@ -146,14 +146,14 @@ static bool valid_password(auto s) {
   return valid_userid(s);
 }
 
-static bool valid_username(auto s);
+static bool valid_username(cstr<30> s);
 
 static bool valid_username(const std::string &s) {
   return valid_username(string2cstr<30>(s));
 }
 
-static bool valid_username(auto s) {
-  if (not std::is_same_v<decltype(s), cstr<30>> or not cstr_end(s))
+static bool valid_username(cstr<30> s) {
+  if (not cstr_end(s))
     return false;
   for (int i = 0; s[i]; ++i)
     if (not inside(s[i], username_chars))
@@ -161,7 +161,6 @@ static bool valid_username(auto s) {
   return true;
 }
 
-// TODO: WTF valid name
 static bool valid_bookname(const cstr<60> &s);
 
 static bool valid_bookname(const std::string &s) {
@@ -182,9 +181,18 @@ static bool valid_bookname(const cstr<60> &s) {
   return true;
 }
 
-static bool valid_ISBN(auto s) {
-  errf("specific ISBN\n");
-  return valid_username(s);
+static bool valid_ISBN(cstr<20> s);
+static bool valid_ISBN(const std::string &s) {
+  return valid_ISBN(string2cstr<20>(s));
+}
+
+static bool valid_ISBN(cstr<20> s) {
+  if (not cstr_end(s))
+    return false;
+  for (int i = 0; s[i]; ++i)
+    if (not inside(s[i], username_chars))
+      return false;
+  return true;
 }
 
 static bool valid_author(auto s) {
