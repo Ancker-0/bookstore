@@ -67,21 +67,28 @@ void Bookstore::insertBook(BookPtr bp) {
 }
 
 void Bookstore::modify(bookid_t bookid, const std::map<std::string, std::string> &map) {
-  // TODO: some validate chore
-
   pos_t pos = db_bookid.get(bookid);
   Book b{};
   bf.getT(pos, b);
   Book newb = b;
 
-  if (map.count("ISBN"))
+  if (map.count("ISBN")) {
     newb.ISBN = (ISBN_t)string2cstr<20>(map.at("ISBN"));
-  if (map.count("name"))
+    Massert(newb.ISBN != b.ISBN, "modify to the same ISBN");
+  }
+  if (map.count("name")) {
     newb.bookname = (bookname_t)string2cstr<60>(map.at("name"));
-  if (map.count("author"))
+    Massert(valid_bookname(newb.bookname), "bad bookname");
+  }
+  if (map.count("author")) {
     newb.author = (author_t)string2cstr<60>(map.at("author"));
-  if (map.count("keyword"))
+    Massert(valid_author(newb.author), "bad author");
+  }
+  if (map.count("keyword")) {
+    split_keyword(map.at("keyword"));
     newb.keyword = (keyword_t)string2cstr<60>(map.at("keyword"));
+    Massert(valid_keyword(newb.keyword), "bad keyword");
+  }
   if (map.count("price"))
     newb.price = (price_t)string2double(map.at("price"));
 
@@ -100,6 +107,7 @@ void Bookstore::import_book(bookid_t bookid, quantity_t quantity, totalcost_t to
 }
 
 void Bookstore::showByISBN(ISBN_t ISBN) {
+  Massert(valid_ISBN(ISBN), "bad ISBN");
   try {
     askByISBN(ISBN).print();
   } catch(const Error &) {
@@ -108,6 +116,7 @@ void Bookstore::showByISBN(ISBN_t ISBN) {
 }
 
 void Bookstore::showByName(bookname_t bookname) {
+  Massert(valid_bookname(bookname), "bad bookname");
   try {
     auto bookptrs = db_bookname.get(bookname);
     std::vector<Book> books;
@@ -128,6 +137,7 @@ void Bookstore::showByName(bookname_t bookname) {
 }
 
 void Bookstore::showByAuthor(author_t author) {
+  Massert(valid_author(author), "bad author");
   try {
     auto bookptrs = db_author.get(author);
     std::vector<Book> books;
@@ -148,6 +158,7 @@ void Bookstore::showByAuthor(author_t author) {
 }
 
 void Bookstore::showByKeyword(keyword_t keyword) {
+  Massert(valid_keyword(keyword), "bad keyword");
   try {
     auto bookptrs = db_keyword.get(keyword);
     std::vector<Book> books;

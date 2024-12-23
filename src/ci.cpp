@@ -195,7 +195,7 @@ void Ci::process_one() {
     Massert(param_inside(tk, modify_allow_fields), "unexpected param");
     Massert(tk.command.size() == 1, "expect no subcommand");
     Massert(AccountCenter::getInstance().login_stack.back().privilege >= 3, "access denied");
-    Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullpos, "not selecting any book");
+    Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullid, "not selecting any book");
     Bookstore::getInstance().modify(AccountCenter::getInstance().select_stack.back(), tk.param);
   } else if (tk.command.at(0) == "show" and tk.command.size() >= 2 and tk.command.at(1) == "finance") {
     Massert(tk.command.size() <= 3, "command");
@@ -226,7 +226,7 @@ void Ci::process_one() {
     Massert(tk.command.size() == 3, "invalid param");
     Massert(tk.param.empty(), "expect no params");
     Massert(AccountCenter::getInstance().login_stack.back().privilege >= 3, "access denied");
-    Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullpos, "not selecting any book");
+    Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullid, "not selecting any book");
     Bookstore::getInstance().import_book(AccountCenter::getInstance().select_stack.back(), string2int(tk.command.at(1)), string2double(tk.command.at(2)));
   } else if (tk.command.at(0) == "buy") {
     Massert(acci.login_stack.size() > 1, "not logged in");
@@ -234,7 +234,7 @@ void Ci::process_one() {
     Massert(tk.command.size() == 3, "command");
     bkst.buy(string2cstr<20>(tk.command.at(1)), string2int(tk.command.at(2)));
   } else if (tk.command.at(0) == ".print") {
-    Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullpos, "not selecting any book");
+    Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullid, "not selecting any book");
     Book b = Bookstore::getInstance().askByBookid(AccountCenter::getInstance().select_stack.back());
     b.print();
     // printf("(book %s %s %s %s)\n", b.ISBN.data(), b.bookname.data(), b.author.data(), b.keyword.data());

@@ -12,7 +12,9 @@ template <size_t size>
 class cstr : public std::array<char, size + 1> {
 };
 
-const char userid_chars[] = "1234567890zxcvbnmasdfghjklqwertyuiopZXCVBNMASDFGHJKLQWERTYUIOP_";
+static const char userid_chars[] = "1234567890zxcvbnmasdfghjklqwertyuiopZXCVBNMASDFGHJKLQWERTYUIOP_";
+static const char username_chars[] = " 0@P`p!1AQaq\"2BRbr#3CScs$4DTdt%5EUeu&6FVfv´7GWgw(8HXhx)9IYiy*:JZjz+;K[k{,<L\\l|-=M]m}.>N^n~/?O_o";
+static const char bookname_chars[] = " 0@P`p!1AQaq2BRbr#3CScs$4DTdt%5EUeu&6FVfv´7GWgw(8HXhx)9IYiy*:JZjz+;K[k{,<L\\l|-=M]m}.>N^n~/?O_o";
 
 static bool inside(char c, const char *s) {
   for (; *s; ++s)
@@ -112,7 +114,23 @@ static bool param_inside(Tokenized &tk, const std::vector<std::string> &allow) {
 }
 
 static int string2int(std::string s) {
-  return std::atoi(s.c_str());
+  // return std::atoi(s.c_str());
+  Massert(s.size() > 0, "empty string");
+  Massert(s.size() <= 10, "too large");
+  for (int i = 0; i < (int)s.size(); ++i)
+    Massert('0' <= s[i] and s[i] <= '9', "not number");
+  std::stringstream ss;
+  ss << s;
+  long long ret;
+  ss >> ret;
+  Massert(ret <= 2147483647, "too large");
+  return ret;
+}
+
+static bool valid_userid(auto s);
+
+static bool valid_userid(const std::string &s) {
+  return valid_userid(string2cstr<30>(s));
 }
 
 static bool valid_userid(auto s) {
@@ -128,9 +146,53 @@ static bool valid_password(auto s) {
   return valid_userid(s);
 }
 
+static bool valid_username(auto s);
+
+static bool valid_username(const std::string &s) {
+  return valid_username(string2cstr<30>(s));
+}
+
 static bool valid_username(auto s) {
-  // TODO
+  if (not std::is_same_v<decltype(s), cstr<30>> or not cstr_end(s))
+    return false;
+  for (int i = 0; s[i]; ++i)
+    if (not inside(s[i], username_chars))
+      return false;
   return true;
+}
+
+// TODO: WTF valid name
+static bool valid_bookname(const cstr<60> &s);
+
+static bool valid_bookname(const std::string &s) {
+  errf("specific bookname\n");
+  return valid_bookname(string2cstr<60>(s));
+}
+
+static bool valid_bookname(const cstr<60> &s) {
+  // if (not std::is_convertible_v<decltype(s), cstr<60>> or not cstr_end(s))
+  //   return false;
+  if (not cstr_end(s))
+    return false;
+  for (int i = 0; s[i]; ++i)
+    if (not inside(s[i], bookname_chars)) {
+      errf("bad char %c %d\n", s[i], s[i]);
+      return false;
+    }
+  return true;
+}
+
+static bool valid_ISBN(auto s) {
+  errf("specific ISBN\n");
+  return valid_username(s);
+}
+
+static bool valid_author(auto s) {
+  return valid_bookname(s);
+}
+
+static bool valid_keyword(auto s) {
+  return valid_bookname(s);
 }
 
 #endif //UTIL_H

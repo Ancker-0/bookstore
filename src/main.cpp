@@ -1,6 +1,7 @@
 #include "ci.h"
 #include "error.h"
 #include "database_more.h"
+#include "util.h"
 #include "config.h"
 
 #include <iostream>
@@ -14,6 +15,7 @@ int main() {
 #if TESTFILE
   freopen(FILENAME, "r", stdin);
 #endif
+  errf("%d\n", valid_bookname(std::string{"Hello"}));
 
   Bfsp bf("test.db");
   DBMore<int, int, int> dbm{bf};
