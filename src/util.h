@@ -150,6 +150,28 @@ static int string2int(std::string s) {
   return ret;
 }
 
+static bool valid_privilege(privilege_t privilege) {
+  return privilege == 1 or privilege == 3 or privilege == 7;
+}
+
+static bool valid_price(std::string s) {
+  if (s.size() > 13 or s.size() == 0)
+    return false;
+  int cnt = 0, last = 0;
+  for (int i = 0; i < (int)s.size(); ++i)
+    if (s[i] != '.' and (s[i] < '0' or s[i] > '9'))
+      return false;
+    else if (s[i] == '.')
+      ++cnt, last = i;
+  if (cnt > 1)
+    return false;
+  if (last + 3 < s.size())
+    return false;  // more than 2 digits
+  if (cnt == 1 and (last == 0 or last + 1 == s.size()))
+    return false;
+  return true;
+}
+
 static bool valid_userid(cstr<30> s);
 
 static bool valid_userid(const std::string &s) {
@@ -187,7 +209,6 @@ static bool valid_username(cstr<30> s) {
 static bool valid_bookname(const cstr<60> &s);
 
 static bool valid_bookname(const std::string &s) {
-  errf("specific bookname\n");
   return valid_bookname(string2cstr<60>(s));
 }
 
@@ -226,6 +247,15 @@ static bool valid_keyword(auto s) {
   return valid_bookname(s);
 }
 
+static bool valid_count(std::string s) {
+  try {
+    int c = string2int(s);
+    return 0 <= c and c < 2147483647;
+  } catch (...) {
+    return false;
+  }
+}
+
 static bookname_t string2bookname(std::string s) {
   Massert(valid_bookname(s), "bad bookname");
   return string2cstr<bookname_t::N>(s);
@@ -254,6 +284,16 @@ static password_t string2password(std::string s) {
 static username_t string2username(std::string s) {
   Massert(valid_username(s), "bad username");
   return string2cstr<username_t::N>(s);
+}
+
+static keyword_t string2keyword(std::string s) {
+  Massert(valid_keyword(s), "bad keyword");
+  return string2cstr<keyword_t::N>(s);
+}
+
+static std::string unquote(std::string s) {
+  Massert(s.size() >= 2 and s[0] == '"' and s[s.size() - 1] == '"', "cannot unquote");
+  return s.substr(1, (int)s.size() - 2);
 }
 
 #endif //UTIL_H

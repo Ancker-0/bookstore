@@ -10,6 +10,6 @@
 #define STRICT_CI 1
 
 #define TESTFILE 0
-#define FILENAME "../data/advanced/testcase1/1.in"
+#define FILENAME "../data/basic/testcase4.in"
 
 #endif

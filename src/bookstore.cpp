@@ -73,24 +73,27 @@ void Bookstore::modify(bookid_t bookid, const std::map<std::string, std::string>
   Book newb = b;
 
   if (map.count("ISBN")) {
-    newb.ISBN = (ISBN_t)string2cstr<20>(map.at("ISBN"));
+    newb.ISBN = string2ISBN(map.at("ISBN"));
     Massert(newb.ISBN != b.ISBN, "modify to the same ISBN");
+    Massert(valid_ISBN(newb.ISBN), "bad ISBN");
   }
   if (map.count("name")) {
-    newb.bookname = (bookname_t)string2cstr<60>(map.at("name"));
+    newb.bookname = string2bookname(map.at("name"));
     Massert(valid_bookname(newb.bookname), "bad bookname");
   }
   if (map.count("author")) {
-    newb.author = (author_t)string2cstr<60>(map.at("author"));
+    newb.author = string2author(map.at("author"));
     Massert(valid_author(newb.author), "bad author");
   }
   if (map.count("keyword")) {
     split_keyword(map.at("keyword"));
-    newb.keyword = (keyword_t)string2cstr<60>(map.at("keyword"));
+    newb.keyword = string2keyword(map.at("keyword"));
     Massert(valid_keyword(newb.keyword), "bad keyword");
   }
-  if (map.count("price"))
+  if (map.count("price")) {
+    Massert(valid_price(map.at("price")), "bad price");
     newb.price = (price_t)string2double(map.at("price"));
+  }
 
   eraseBook(pos);
   bf.putT(pos, newb);

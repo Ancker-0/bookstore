@@ -32,21 +32,21 @@ Tokenized ci::tokenize(std::string s) {
     for (i_ = i; i_ < len and s[i_] != ' '; ++i_)
       now += s[i_];
     assert(now != "");
-    sp.push_back(now);
+    sp.push_back(now), now = "";
   }
   for (int i = 0, cmd = true; i < (int)sp.size(); ++i)
     if (sp[i][0] == '-') {
       cmd = false;
       int p = 1;
-      for (; p < (int)sp[i].size(); ++i)
+      for (; p < (int)sp[i].size(); ++p)
         if (sp[i][p] == '=')
           break;
       if (p == 1 or p >= (int)sp[i].size() - 1)
-        res.fail_param = true;
+        res.command.push_back(sp[i]), res.fail_param = true;
       else {
         std::string key = sp[i].substr(1, p - 1);
         if (res.param.count(key))
-          res.fail_param = true;
+          res.command.push_back(sp[i]), res.fail_param = true;
         else
           res.param[key] = sp[i].substr(p + 1);;
       }
@@ -198,44 +198,52 @@ void Ci::process_one() {
     GOODTK;
     Massert(tk.param.empty(), "expect no params");
     Massert(tk.command.size() >= 2 and tk.command.size() <= 3, "invalid param");
-    AccountCenter::getInstance().login((userid_t)string2cstr<30>(tk.command.at(1)), (password_t)string2cstr<30>(tk.command.size() >= 3 ? tk.command.at(2) : ""));
+    AccountCenter::getInstance().login(string2userid(tk.command.at(1)), string2password(tk.command.size() >= 3 ? tk.command.at(2) : ""));
   } else if (tk.command.at(0) == "register") {
-    Massert(tk.param.empty(), "expect no params");
-    Massert(tk.command.size() == 4, "invalid param");
-    AccountCenter::getInstance().regis((userid_t)string2cstr<30>(tk.command.at(1)), (password_t)string2cstr<30>(tk.command.at(2)), (username_t)string2cstr<30>(tk.command.at(3)));
+    // GOODTK;
+    // Massert(tk.param.empty(), "expect no params");
+    Massert(tk.splited.size() == 4, "invalid param");
+    AccountCenter::getInstance().regis(string2userid(tk.command.at(1)), string2password(tk.command.at(2)), string2username(tk.splited.at(3)));
   } else if (tk.command.at(0) == "passwd") {
+    GOODTK;
     Massert(tk.param.empty(), "expect no params");
     Massert(tk.command.size() == 3 or tk.command.size() == 4, "invalid param");
     if (tk.command.size() == 3)
-      AccountCenter::getInstance().changePassword((userid_t)string2cstr<30>(tk.command.at(1)), (password_t)string2cstr<30>(""), (password_t)string2cstr<30>(tk.command.at(2)));
+      AccountCenter::getInstance().changePassword(string2userid(tk.command.at(1)), string2password(""), string2password(tk.command.at(2)));
     else
-      AccountCenter::getInstance().changePassword((userid_t)string2cstr<30>(tk.command.at(1)), (password_t)string2cstr<30>(tk.command.at(2)), (password_t)string2cstr<30>(tk.command.at(3)));
+      AccountCenter::getInstance().changePassword(string2userid(tk.command.at(1)), string2password(tk.command.at(2)), string2password(tk.command.at(3)));
   } else if (tk.command.at(0) == "logout") {
+    GOODTK;
     Massert(tk.param.empty() and tk.command.size() == 1, "expect no params");
     AccountCenter::getInstance().logout();
   } else if (tk.command.at(0) == "useradd") {
-    Massert(tk.param.empty(), "expect no params");
-    Massert(tk.command.size() == 5, "invalid param");
+    // GOODTK;
+    // Massert(tk.param.empty(), "expect no params");
+    Massert(tk.splited.size() == 5, "invalid param");
     Massert(tk.command.at(3).size() == 1 and '0' <= tk.command.at(3)[0] and tk.command.at(3)[0] <= '9', "privilege should be a one-digit number");
-    AccountCenter::getInstance().useradd((userid_t)string2cstr<30>(tk.command.at(1)), (password_t)string2cstr<30>(tk.command.at(2)), (privilege_t)(tk.command.at(3)[0] - '0'), (username_t)string2cstr<30>(tk.command.at(4)));
+    AccountCenter::getInstance().useradd(string2userid(tk.command.at(1)), string2password(tk.command.at(2)), (privilege_t)(tk.command.at(3)[0] - '0'), string2username(tk.splited.at(4)));
   } else if (tk.command.at(0) == "delete") {
+    GOODTK;
     Massert(tk.param.empty(), "expect no params");
     Massert(tk.command.size() == 2, "invalid param");
-    AccountCenter::getInstance().erase((userid_t)string2cstr<30>(tk.command.at(1)));
-  } else if (tk.command.at(0) == "stack") {
+    AccountCenter::getInstance().erase(string2userid(tk.command.at(1)));
+  } else if (tk.command.at(0) == ".stack") {
     AccountCenter &ac = AccountCenter::getInstance();
     assert(ac.login_stack.size() == ac.select_stack.size());
     for (int i = 0; i < (int)ac.login_stack.size(); ++i)
       printf("(%s %d) ", ac.login_stack[i].userid.data(), ac.select_stack[i]);
     puts("");
-  } else if (tk.command.at(0) == "debug") {
+  } else if (tk.command.at(0) == ".debug") {
     AccountCenter::getInstance().db.printKeys();
   } else if (tk.command.at(0) == "select") {
-    Massert(tk.param.empty(), "expect no params");
-    Massert(tk.command.size() == 2, "invalid param");
+    // GOODTK;
+    // Massert(tk.param.empty(), "expect no params");
+    Massert(tk.splited.size() == 2, "invalid param");
     AccountCenter::getInstance().select((ISBN_t)string2cstr<20>(tk.command.at(1)));
   } else if (tk.command.at(0) == "modify") {
+    GOODTK;
     static const std::vector<std::string> modify_allow_fields = { "ISBN", "name", "author", "keyword", "price" };
+    static const std::vector<std::string> modify_unquote_fields = { "name", "author", "keyword" };
     // for (auto [k, _] : tk.param)
     //   errf("%s ", k.c_str());
     // errf("\n");
@@ -243,43 +251,53 @@ void Ci::process_one() {
     Massert(tk.command.size() == 1, "expect no subcommand");
     Massert(AccountCenter::getInstance().login_stack.back().privilege >= 3, "access denied");
     Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullid, "not selecting any book");
+    for (auto un : modify_unquote_fields)
+      if (tk.param.count(un))
+        tk.param[un] = unquote(tk.param[un]);
     Bookstore::getInstance().modify(AccountCenter::getInstance().select_stack.back(), tk.param);
   } else if (tk.command.at(0) == "show" and tk.command.size() >= 2 and tk.command.at(1) == "finance") {
     Massert(tk.command.size() <= 3, "command");
     Massert(acci.login_stack.size() > 1 and acci.login_stack.back().privilege == 7, "access denied");
     Massert(tk.param.empty(), "param");
-    if (tk.command.size() == 2)
+    if (tk.splited.size() == 2)
       fnce.showAll();
     else
-      fnce.show(string2int(tk.command.at(2)));
+      fnce.show(string2int(tk.splited.at(2)));
   } else if (tk.command.at(0) == "show") {
+    GOODTK;
     static const std::vector<std::string> show_allow_fields = { "ISBN", "name", "author", "keyword" };
+    static const std::vector<std::string> show_unquote_fields = { "name", "author", "keyword" };
     Massert(tk.param.empty() or (tk.param.size() == 1 and param_inside(tk, show_allow_fields)), "can't show");
     Massert(acci.login_stack.size() > 1 and acci.login_stack.back().privilege >= 1, "access denied");
+    for (auto un : show_unquote_fields)
+      if (tk.param.count(un))
+        tk.param[un] = unquote(tk.param[un]);
 
     if (tk.param.count("ISBN")) {
-      Bookstore::getInstance().showByISBN(string2cstr<20>(tk.param["ISBN"]));
+      Bookstore::getInstance().showByISBN(string2ISBN(tk.param["ISBN"]));
     } else if (tk.param.count("name")) {
-      Bookstore::getInstance().showByName(string2cstr<60>(tk.param["name"]));
+      Bookstore::getInstance().showByName(string2bookname(tk.param["name"]));
     } else if (tk.param.count("author")) {
-      Bookstore::getInstance().showByAuthor(string2cstr<60>(tk.param["author"]));
+      Bookstore::getInstance().showByAuthor(string2author(tk.param["author"]));
     } else if (tk.param.count("keyword")) {
-      Bookstore::getInstance().showByKeyword(string2cstr<60>(tk.param["keyword"]));
+      Bookstore::getInstance().showByKeyword(string2keyword(tk.param["keyword"]));
     } else {
       assert(tk.param.empty());
       Bookstore::getInstance().showAll();
     }
   } else if (tk.command.at(0) == "import") {
-    Massert(tk.command.size() == 3, "invalid param");
+    GOODTK;
+    Massert(tk.splited.size() == 3, "invalid param");
     Massert(tk.param.empty(), "expect no params");
     Massert(AccountCenter::getInstance().login_stack.back().privilege >= 3, "access denied");
     Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullid, "not selecting any book");
-    Bookstore::getInstance().import_book(AccountCenter::getInstance().select_stack.back(), string2int(tk.command.at(1)), string2double(tk.command.at(2)));
+    Massert(valid_price(tk.splited.at(2)), "invalid price");
+    Bookstore::getInstance().import_book(AccountCenter::getInstance().select_stack.back(), string2int(tk.splited.at(1)), string2double(tk.splited.at(2)));
   } else if (tk.command.at(0) == "buy") {
     Massert(acci.login_stack.size() > 1, "not logged in");
-    Massert(tk.param.empty(), "param");
-    Massert(tk.command.size() == 3, "command");
-    bkst.buy(string2cstr<20>(tk.command.at(1)), string2int(tk.command.at(2)));
+    // Massert(tk.param.empty(), "param");
+    Massert(tk.splited.size() == 3, "command");
+    bkst.buy(string2ISBN(tk.splited.at(1)), string2int(tk.splited.at(2)));
   } else if (tk.command.at(0) == ".print") {
     Massert(AccountCenter::getInstance().select_stack.size() > 1 and AccountCenter::getInstance().select_stack.back() != nullid, "not selecting any book");
     Book b = Bookstore::getInstance().askByBookid(AccountCenter::getInstance().select_stack.back());

@@ -39,6 +39,7 @@ void AccountCenter::useradd(userid_t userid, password_t password, privilege_t pr
     throw Error("useradd: user exists");
   Massert(login_stack.back().privilege >= 3, "access denied");
   Massert(login_stack.back().privilege > privilege, "cannot create such privilege");
+  Massert(valid_privilege(privilege), "bad privilege");
   Massert(valid_userid(userid), "bad userid");
   Massert(valid_password(password), "bad password");
   Massert(valid_username(username), "bad username");
