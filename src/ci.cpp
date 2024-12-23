@@ -34,8 +34,6 @@ Tokenized ci::tokenize(std::string s) {
           } else {
             inside_quote = true;
           }
-        } else if (s[i_] == '\\') {
-          backslash = true;
         } else if (s[i_] == ' ') {
           if (inside_quote)
             cur += s[i_];
@@ -61,8 +59,6 @@ Tokenized ci::tokenize(std::string s) {
           } else {
             inside_quote = true;
           }
-        } else if (s[i_] == '\\') {
-          backslash = true;
         } else if (s[i_] == ' ') {
           if (inside_quote)
             key += s[i_];
@@ -90,8 +86,6 @@ Tokenized ci::tokenize(std::string s) {
           } else {
             inside_quote = true;
           }
-        } else if (s[i_] == '\\') {
-          backslash = true;
         } else if (s[i_] == ' ') {
           if (inside_quote)
             val += s[i_];
