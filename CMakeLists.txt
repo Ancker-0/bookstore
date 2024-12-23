@@ -3,7 +3,7 @@ project(bookstore)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(bs
+add_executable(code
         src/main.cpp
         src/ci.cpp
         src/ci.h
