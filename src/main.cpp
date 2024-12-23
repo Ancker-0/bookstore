@@ -15,8 +15,9 @@ int main() {
 #if TESTFILE
   freopen(FILENAME, "r", stdin);
 #endif
-  // printf("%d\n", (int)'´');
-  errf("%d\n", valid_bookname(std::string{"Hello"}));
+  // errf("%d\n", valid_bookname(std::string{"Hello"}));
+  // for (int i = 32; i <= 126; ++i)
+  //   assert(inside(i, username_chars));
 
   Bfsp bf("test.db");
   DBMore<int, int, int> dbm{bf};

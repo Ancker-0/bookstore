@@ -75,20 +75,25 @@ void Bookstore::modify(bookid_t bookid, const std::map<std::string, std::string>
   if (map.count("ISBN")) {
     newb.ISBN = string2ISBN(map.at("ISBN"));
     Massert(newb.ISBN != b.ISBN, "modify to the same ISBN");
+    Massert(not cstr_null(newb.ISBN), "null param");
     Massert(valid_ISBN(newb.ISBN), "bad ISBN");
+    Massert(not db_ISBN.exist(newb.ISBN), "duplicated ISBN");
   }
   if (map.count("name")) {
     newb.bookname = string2bookname(map.at("name"));
     Massert(valid_bookname(newb.bookname), "bad bookname");
+    Massert(not cstr_null(newb.bookname), "null param");
   }
   if (map.count("author")) {
     newb.author = string2author(map.at("author"));
     Massert(valid_author(newb.author), "bad author");
+    Massert(not cstr_null(newb.author), "null param");
   }
   if (map.count("keyword")) {
     split_keyword(map.at("keyword"));
     newb.keyword = string2keyword(map.at("keyword"));
     Massert(valid_keyword(newb.keyword), "bad keyword");
+    Massert(not cstr_null(newb.keyword), "null param");
   }
   if (map.count("price")) {
     Massert(valid_price(map.at("price")), "bad price");
@@ -101,6 +106,8 @@ void Bookstore::modify(bookid_t bookid, const std::map<std::string, std::string>
 }
 
 void Bookstore::import_book(bookid_t bookid, quantity_t quantity, totalcost_t totalcost) {
+  Massert(quantity > 0, "bad quantity");
+  Massert(totalcost > 0, "bad totalcost");
   pos_t pos = db_bookid.get(bookid);
   Book b{}; bf.getT(pos, b);
   b.quantity += quantity;
