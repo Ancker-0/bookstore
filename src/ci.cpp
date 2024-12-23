@@ -274,12 +274,19 @@ void Ci::process_one() {
         tk.param[un] = unquote(tk.param[un]);
 
     if (tk.param.count("ISBN")) {
+      Massert(tk.param.at("ISBN") != "", "bad ISBN");
       Bookstore::getInstance().showByISBN(string2ISBN(tk.param["ISBN"]));
     } else if (tk.param.count("name")) {
+      Massert(tk.param.at("name") != "", "bad name");
       Bookstore::getInstance().showByName(string2bookname(tk.param["name"]));
     } else if (tk.param.count("author")) {
+      Massert(tk.param.at("author") != "", "bad author");
       Bookstore::getInstance().showByAuthor(string2author(tk.param["author"]));
     } else if (tk.param.count("keyword")) {
+      Massert(tk.param.at("keyword") != "", "bad keyword");
+      auto &s = tk.param["keyword"];
+      for (auto c : s)
+        Massert(c != '|', "can only show by one keyword");
       Bookstore::getInstance().showByKeyword(string2keyword(tk.param["keyword"]));
     } else {
       assert(tk.param.empty());
