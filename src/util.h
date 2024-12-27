@@ -108,6 +108,7 @@ static cstr<size> string2cstr(std::string s) {
 }
 
 static double string2double(std::string s) {
+  Massert(s.size() <= 13, "bad string");
   std::stringstream ss{s};
   double ret{};
   ss >> ret;

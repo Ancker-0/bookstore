@@ -47,7 +47,7 @@ void Bookstore::eraseBook(BookPtr bp) {
     db_author.erase(b.author, b.bookid);
   if (not cstr_null(b.keyword))
     for (auto &k : split_keyword(b.keyword.data()))
-      db_keyword.erase(string2cstr<60>(k), b.bookid);
+      db_keyword.erase(string2keyword(k), b.bookid);
   db_bookid.erase(b.bookid);
 }
 
@@ -62,7 +62,7 @@ void Bookstore::insertBook(BookPtr bp) {
     db_author.insert(b.author, bp, b.bookid);
   if (not cstr_null(b.keyword))
     for (auto &k : split_keyword(b.keyword.data()))
-      db_keyword.insert(string2cstr<60>(k), bp, b.bookid);
+      db_keyword.insert(string2keyword(k), bp, b.bookid);
   db_bookid.insert(b.bookid, bp);
 }
 

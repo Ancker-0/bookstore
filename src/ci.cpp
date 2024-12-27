@@ -208,6 +208,7 @@ void Ci::process_one() {
     GOODTK;
     Massert(tk.param.empty(), "expect no params");
     Massert(tk.command.size() == 3 or tk.command.size() == 4, "invalid param");
+    Massert(acci.login_stack.size() > 1, "only logged-in user can change password");
     if (tk.command.size() == 3)
       AccountCenter::getInstance().changePassword(string2userid(tk.command.at(1)), string2password(""), string2password(tk.command.at(2)));
     else
@@ -226,6 +227,7 @@ void Ci::process_one() {
     GOODTK;
     Massert(tk.param.empty(), "expect no params");
     Massert(tk.command.size() == 2, "invalid param");
+    Massert(not acci.login_stack.empty() and acci.login_stack.back().privilege >= 7, "access denied");
     AccountCenter::getInstance().erase(string2userid(tk.command.at(1)));
   } else if (tk.command.at(0) == ".stack") {
     AccountCenter &ac = AccountCenter::getInstance();
@@ -256,8 +258,9 @@ void Ci::process_one() {
         tk.param[un] = unquote(tk.param[un]);
     Bookstore::getInstance().modify(AccountCenter::getInstance().select_stack.back(), tk.param);
   } else if (tk.command.at(0) == "show" and tk.command.size() >= 2 and tk.command.at(1) == "finance") {
+    GOODTK;
     Massert(tk.command.size() <= 3, "command");
-    Massert(acci.login_stack.size() > 1 and acci.login_stack.back().privilege == 7, "access denied");
+    Massert(acci.login_stack.size() > 1 and acci.login_stack.back().privilege >= 7, "access denied");
     Massert(tk.param.empty(), "param");
     if (tk.splited.size() == 2)
       fnce.showAll();
@@ -267,6 +270,7 @@ void Ci::process_one() {
     GOODTK;
     static const std::vector<std::string> show_allow_fields = { "ISBN", "name", "author", "keyword" };
     static const std::vector<std::string> show_unquote_fields = { "name", "author", "keyword" };
+    Massert(tk.command.size() == 1, "bad command");
     Massert(tk.param.empty() or (tk.param.size() == 1 and param_inside(tk, show_allow_fields)), "can't show");
     Massert(acci.login_stack.size() > 1 and acci.login_stack.back().privilege >= 1, "access denied");
     for (auto un : show_unquote_fields)
