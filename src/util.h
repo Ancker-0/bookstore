@@ -252,7 +252,7 @@ static bool valid_keyword(auto s) {
 static bool valid_count(std::string s) {
   try {
     int c = string2int(s);
-    return 0 <= c and c < 2147483647;
+    return 0 <= c and c <= 2147483647;
   } catch (...) {
     return false;
   }

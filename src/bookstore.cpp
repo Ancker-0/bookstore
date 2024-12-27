@@ -110,6 +110,7 @@ void Bookstore::import_book(bookid_t bookid, quantity_t quantity, totalcost_t to
   Massert(totalcost > 0, "bad totalcost");
   pos_t pos = db_bookid.get(bookid);
   Book b{}; bf.getT(pos, b);
+  assert(b.quantity <= INT_MAX - quantity);
   b.quantity += quantity;
   b.totalcost += totalcost;
   bf.putT(pos, b);
