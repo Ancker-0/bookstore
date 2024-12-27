@@ -5,6 +5,7 @@
 #include "ci.h"
 
 #include <array>
+#include <cmath>
 #include <sstream>
 #include <cstring>
 #include <cstdint>
@@ -112,7 +113,7 @@ static double string2double(std::string s) {
   std::stringstream ss{s};
   double ret{};
   ss >> ret;
-  return ret;
+  return std::round(ret * 100) / 100;
 }
 
 static std::string double2string(double r) {
@@ -166,10 +167,10 @@ static bool valid_price(std::string s) {
       ++cnt, last = i;
   if (cnt > 1)
     return false;
-  if (last + 3 < s.size())
-    return false;  // more than 2 digits
-  if (cnt == 1 and (last == 0 or last + 1 == s.size()))
-    return false;
+  // if (last + 3 < s.size())
+  //   return false;  // more than 2 digits
+  // if (cnt == 1 and (last == 0 or last + 1 == s.size()))
+  //   return false;
   return true;
 }
 
