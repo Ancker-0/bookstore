@@ -54,10 +54,10 @@ bf.putT(id, name); })
 constexpr size_t child_cnt = 16;
 
 // TODO: Add more static assertions to type Key and Val
-template <class Key, class Val, auto KeyCmp = std::less<Key>{}, auto KeyEq = std::equal_to<Key>{}, int header_id = 0>
+template<class Key, class Val, auto KeyCmp = std::less<Key>{}, auto KeyEq = std::equal_to<Key>{}, int header_id = 0>
 class Database {
-static_assert(std::is_convertible_v<decltype(KeyCmp), std::function<bool(Key, Key)>>
-              && std::is_convertible_v<decltype(KeyEq), std::function<bool(Key, Key)>>);
+  static_assert(std::is_convertible_v<decltype(KeyCmp), std::function<bool(Key, Key)> >
+                && std::is_convertible_v<decltype(KeyEq), std::function<bool(Key, Key)> >);
 
 public:
   Database() = delete;
@@ -73,11 +73,10 @@ public:
   void erase(Key key);
   Bfsp &bf;
 
-	std::vector<Val> getAll();
+  std::vector<Val> getAll();
   void printKeys();
 
 private:
-
   struct BHeader {
     int depth;
     pos_t root;
@@ -110,7 +109,7 @@ private:
 
 template<class Key, class Val, auto KeyCmp, auto KeyEq, int header_id>
 Database<Key, Val, KeyCmp, KeyEq, header_id>::Database(Bfsp &bf_) : bf(bf_) {
-	// errf("initializing db");
+  // errf("initializing db");
   bf.getHeaderT(header_id, header);
   if (header.root == 0) {
     errf("initializing tree\n");
@@ -123,11 +122,11 @@ Database<Key, Val, KeyCmp, KeyEq, header_id>::Database(Bfsp &bf_) : bf(bf_) {
 
 template<class Key, class Val, auto KeyCmp, auto KeyEq, int header_id>
 void Database<Key, Val, KeyCmp, KeyEq, header_id>::insert(Key key, Val val) {
-    pos_t now = header.root;
+  pos_t now = header.root;
   int depth = 0;
   Node node{};
   while (depth < header.depth) {
-    WITH_ETR(now, node, );
+    WITH_ETR(now, node,);
     size_t k{};
     for (k = 0; k + 1 < node.size; ++k)
       if (!KeyCmp(node.key[k], key))
@@ -135,13 +134,14 @@ void Database<Key, Val, KeyCmp, KeyEq, header_id>::insert(Key key, Val val) {
     now = node.chd[k];
     ++depth;
   }
-  WITH_ETR(now, node, );
+  WITH_ETR(now, node,);
   size_t k;
   for (k = 0; k < node.size; ++k) {
     if (!KeyCmp(node.key[k], key))
       break;
   }
-  if (k < node.size && KeyEq(node.key[k], key)) {  // exist
+  if (k < node.size && KeyEq(node.key[k], key)) {
+    // exist
     if (node.chd[k] == nullpos) {
       node.chd[k] = bf.allocT(val);
       bf.putT(now, node);
@@ -158,7 +158,7 @@ void Database<Key, Val, KeyCmp, KeyEq, header_id>::insert(Key key, Val val) {
     bf.putT(bf.getHeaderPos(header_id), header);
     node.chd[k] = bf.allocT(val);
     ++node.size;
-    WITH_ETW(now, node, );
+    WITH_ETW(now, node,);
   } else {
     assert(node.size == child_cnt - 1);
     ++header.timestamp;
@@ -187,13 +187,13 @@ void Database<Key, Val, KeyCmp, KeyEq, header_id>::insert(Key key, Val val) {
     memcpy(&rnode.chd[0], &kchd[mid], sizeof(kchd[0]) * (child_cnt - mid));
     pos_t rnode_pos = bf.allocT(rnode);
     pos_t node_pos = now;
-    WITH_ETW(now, node, );
+    WITH_ETW(now, node,);
     // std::string old_key = key;
     key = ktmp[mid - 1];
 
     for (; depth > 0; --depth) {
       Node fa{};
-      WITH_ETR(node.fa, fa, );
+      WITH_ETR(node.fa, fa,);
       if (fa.size + 1 <= child_cnt) {
         pos_t k{};
         for (k = 0; k + 1 < fa.size; ++k)
@@ -219,13 +219,13 @@ void Database<Key, Val, KeyCmp, KeyEq, header_id>::insert(Key key, Val val) {
         memcpy(&ktmp[0], &fa.key[0], sizeof(Key) * k);
         memcpy(&kchd[0], &fa.chd[0], sizeof(fa.chd[0]) * (k + 1));
         // if (k + 1 < child_cnt)
-          // strcpy(ktmp[k], key.c_str());
+        // strcpy(ktmp[k], key.c_str());
         ktmp[k] = key;
         memcpy(&kchd[k + 1], &rnode_pos, sizeof(rnode_pos));
         assert(kchd[k] == node_pos);
         if (k + 1 < child_cnt) {
-          memcpy(&kchd[k + 2], &fa.chd[k + 1], sizeof(fa.chd[0]) * ((int)child_cnt - k - 1));
-          memcpy(&ktmp[k + 1], &fa.key[k], sizeof(Key) * ((int)child_cnt - 1 - k));
+          memcpy(&kchd[k + 2], &fa.chd[k + 1], sizeof(fa.chd[0]) * ((int) child_cnt - k - 1));
+          memcpy(&ktmp[k + 1], &fa.key[k], sizeof(Key) * ((int) child_cnt - 1 - k));
         }
 
         mid = (child_cnt + 1) / 2;
@@ -241,7 +241,7 @@ void Database<Key, Val, KeyCmp, KeyEq, header_id>::insert(Key key, Val val) {
         memcpy(&rnode.key[0], &ktmp[mid], sizeof(Key) * (rnode.size - 1));
         memcpy(&rnode.chd[0], &kchd[mid], sizeof(kchd[0]) * rnode.size);
         rnode_pos = bf.allocT(rnode);
-        WITH_ETW(node_pos, node, );
+        WITH_ETW(node_pos, node,);
         for (int i = 0; i < rnode.size; ++i)
           WITH_T(rnode.chd[i], Node, ntmp, ntmp.fa = rnode_pos);
         WITH_T(old_node_pos, Node, ntmp, ntmp.fa = k < mid ? node_pos : rnode_pos);
@@ -400,20 +400,22 @@ void Database<Key, Val, KeyCmp, KeyEq, header_id>::printKeys() {
 
 template<class Key, class Val, auto KeyCmp, auto KeyEq, int header_id>
 std::vector<Val> Database<Key, Val, KeyCmp, KeyEq, header_id>::getAll() {
-	std::vector<Val> ret;
+  std::vector<Val> ret;
   std::function<void(const Node &, int)> dfs = [&](const Node &n, int dep) {
     if (dep == header.depth) {
-      for (int i = 0; i < n.size; ++i) {
-				Val tmp{}; bf.getT(n.chd[i], tmp);
-				ret.push_back(tmp);
-			}
+      for (int i = 0; i < n.size; ++i)
+        if (n.chd[i] != nullpos) {
+          Val tmp{};
+          bf.getT(n.chd[i], tmp);
+          ret.push_back(tmp);
+        }
       return;
     } else
       for (int i = 0; i <= n.size; ++i)
         dfs(NWITH_TR(bf, n.chd[i], Node, tmp, tmp), dep + 1);
   };
   dfs(NWITH_TR(bf, header.root, Node, tmp, tmp), 0);
-	return ret;
+  return ret;
 }
 
 #undef NWITH_T
